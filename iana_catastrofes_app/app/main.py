@@ -89,7 +89,7 @@ async def upload_document(
     # Reglas automáticas rápidas
     quick_rules = evaluate_emergency_rules(extracted_text, document_type)
     
-    # Análisis IA con Gemini (contexto basado en datos de la emergencia)
+    # Análisis IA (contexto basado en datos de la emergencia)
     ai_doc_result = analyze_single_document(extracted_text, document_type, file_path=file_path, project_data=proj)
     
     # Combinar alertas
@@ -119,7 +119,6 @@ async def upload_document(
         prev_infractions = proj.get("consolidated_infractions", [])
         prev_meta = proj.get("extracted_metadata", [])
         
-        # Consolidar con Gemini
         eval_res = consolidate_accident_evaluation(
             previous_context=prev_context,
             new_doc_summary=ai_doc_result.document_summary,

@@ -142,8 +142,8 @@ def render_project_dashboard():
         """, unsafe_allow_html=True)
 
     with col_h2:
-        if st.button("Ejecutar / Reevaluar Análisis con Gemini AI", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
-            with st.spinner("Ejecutando evaluación y reevaluación con Gemini Vision AI..."):
+        if st.button("Ejecutar / Reevaluar Análisis con IA", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
+            with st.spinner("Ejecutando evaluación..."):
                 try:
                     docs = list_project_documents(proj_id)
                     latest_summary = f"Tipo de Proyecto: {project_category}. " + (description if description else "Emergencia registrada en terreno.")
@@ -177,7 +177,7 @@ def render_project_dashboard():
                     st.success("¡Reevaluación completada exitosamente!")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"Error en el análisis de Gemini AI: {e}")
+                    st.error(f"Error en el análisis: {e}")
 
     with col_h3:
         if not read_only:
@@ -361,7 +361,7 @@ def render_project_dashboard():
                 key="uploader_incident_multi"
             )
 
-            if uploaded_files and st.button("Procesar Nuevas Evidencias con Gemini Vision AI", type="primary"):
+            if uploaded_files and st.button("Procesar Nuevas Evidencias", type="primary"):
                 with st.spinner("Analizando imágenes/documentos y consolidando el estado de la emergencia..."):
                     try:
                         for uploaded_file in uploaded_files:

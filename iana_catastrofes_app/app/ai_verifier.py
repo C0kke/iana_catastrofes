@@ -25,7 +25,7 @@ try:
     client = instructor.from_genai(genai_client, mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS)
 except Exception as e:
     client = None
-    print(f"Error inicializando el cliente Gemini: {e}")
+    print(f"Error inicializando el cliente de IA: {e}")
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INFORME_ALFA_PATH = os.path.join(BASE_DIR, "knowledge", "informe_alfa.json")
@@ -174,10 +174,10 @@ def analyze_single_document(
     project_data: Optional[Dict[str, Any]] = None,
     model_name: str = DEFAULT_MODEL
 ) -> DocumentSpecificAnalysis:
-    """Analiza un documento de texto, Word o fotografía usando Gemini Multimodal + Instructor.
+    """Analiza un documento de texto, Word o fotografía a través de la IA.
     El contexto proviene exclusivamente de los datos de la emergencia registrada por el usuario."""
     if not client:
-        raise RuntimeError("El cliente de Gemini no está configurado. Revisa GEMINI_API_KEY.")
+        raise RuntimeError("El cliente de IA no está configurado. Revisa la clave")
 
     # Contexto basado en los datos propios de la emergencia, NO en documentos externos
     emergency_context = build_project_context(project_data)
@@ -221,7 +221,7 @@ def analyze_single_document(
                 image_part = types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
                 content_list.append(image_part)
             except Exception as e:
-                print(f"Error procesando imagen para Gemini: {e}")
+                print(f"Error procesando imagen para: {e}")
 
     res = client.chat.completions.create(
         model=model_name,
@@ -246,9 +246,8 @@ def consolidate_accident_evaluation(
     """Genera la evaluación consolidada asignando las oficinas exactas de intervención.
     El contexto proviene de los datos propios de la emergencia, NO de documentos externos."""
     if not client:
-        raise RuntimeError("El cliente de Gemini no está configurado. Revisa GEMINI_API_KEY.")
+        raise RuntimeError("El cliente de IA no está configurado. Revisa la clave")
 
-    # Contexto basado en los datos propios de la emergencia registrada por el usuario
     emergency_context = build_project_context(project_data)
 
     prompt = f"""
