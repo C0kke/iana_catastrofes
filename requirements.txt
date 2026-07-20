@@ -1,0 +1,24 @@
+# Dependencias para despliegue en Streamlit Community Cloud
+streamlit>=1.25.0
+streamlit-folium>=0.15.0
+folium>=0.14.0
+
+# Backend e Inteligencia Artificial
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
+instructor>=0.4.0
+google-genai>=0.1.0
+
+# Base de datos Supabase
+supabase>=1.0.0
+postgrest>=0.10.0
+
+# Procesamiento de documentos y fotografías
+PyMuPDF>=1.22.0
+python-docx>=0.8.11
+Pillow>=9.0.0
+
+# Utilidades
+python-dotenv>=1.0.0
+python-multipart>=0.0.6

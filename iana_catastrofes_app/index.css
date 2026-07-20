@@ -1,0 +1,121 @@
+/* Reglas Generales */
+html,
+body,
+[class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !alignment;
+}
+
+/* Modo Claro (Default Streamlit / Light) */
+:root {
+    --app-bg: #ffffff;
+    --card-bg: #f8fafc;
+    --card-border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --blue-title: #0284c7;
+    --blue-accent: #2563eb;
+}
+
+/* Modo Oscuro (Dark Theme) */
+[data-theme="dark"],
+@media (prefers-color-scheme: dark) {
+    :root {
+        --app-bg: #0f172a;
+        --card-bg: #1e293b;
+        --card-border: #334155;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --blue-title: #38bdf8;
+        --blue-accent: #60a5fa;
+    }
+}
+
+/* Ajustes de Contenedores y Modales */
+.stApp {
+    background-color: var(--app-bg) !important;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: var(--card-bg) !important;
+    border-right: 1px solid var(--card-border) !important;
+}
+
+/* Botones sin rojo - Azul y Celeste */
+.stButton>button {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--card-border) !important;
+}
+
+.stButton>button[kind="primary"],
+.stButton>button[data-testid="baseButton-primary"] {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+    border: 1px solid #0369a1 !important;
+}
+
+.stButton>button:hover {
+    border-color: var(--blue-accent) !important;
+    color: var(--blue-title) !important;
+}
+
+/* Modales y Ventanas Flotantes */
+div[role="dialog"] {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    color: var(--text-primary) !important;
+}
+
+div[role="dialog"] label,
+div[role="dialog"] p,
+div[role="dialog"] span,
+div[role="dialog"] div {
+    color: var(--text-primary) !important;
+}
+
+/* Titulos y textos */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--blue-title) !important;
+}
+
+p,
+span,
+label {
+    color: var(--text-primary);
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 6px;
+    background-color: var(--card-bg) !important;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+}
+
+.stTabs [data-baseweb="tab"] {
+    border-radius: 6px;
+    color: var(--text-secondary) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+    font-weight: bold;
+}
+
+[data-testid="stMetricValue"] {
+    font-weight: 700;
+    color: var(--blue-title) !important;
+}
+
+.stProgress>div>div>div>div {
+    background-image: linear-gradient(to right, #0284c7, #2563eb, #16a34a) !important;
+}
