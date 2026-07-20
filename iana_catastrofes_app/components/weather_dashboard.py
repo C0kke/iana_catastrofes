@@ -180,12 +180,16 @@ def render_weather_monitoring_tab(default_commune: str = "Coquimbo"):
             legend=dict(orientation="h", yanchor="top", y=-0.5, xanchor="center", x=0.5),
             margin=dict(t=50, b=80, l=10, r=10),
             height=400,
-            template="plotly_dark"
+            template="plotly_white",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#0f172a")
         )
 
         fig.update_xaxes(title_text="Fecha / Hora", showgrid=False)
-        fig.update_yaxes(title_text="Precipitación (mm/h)", secondary_y=False, showgrid=True, gridcolor="#333")
+        fig.update_yaxes(title_text="Precipitación (mm/h)", secondary_y=False, showgrid=True, gridcolor="#e2e8f0")
         fig.update_yaxes(title_text="Viento (km/h) / Temp (°C)", secondary_y=True, showgrid=False)
+
 
         st.plotly_chart(fig, use_container_width=True)
 

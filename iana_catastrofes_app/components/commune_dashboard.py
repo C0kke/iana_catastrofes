@@ -305,9 +305,17 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             values="Cantidad",
             title="Categoría de Emergencia",
             color_discrete_sequence=px.colors.qualitative.Set2,
-            hole=0.4
+            hole=0.4,
+            template="plotly_white"
         )
-        fig_pie1.update_layout(margin=dict(t=40, b=0, l=0, r=0), showlegend=True, height=280)
+        fig_pie1.update_layout(
+            margin=dict(t=40, b=0, l=0, r=0),
+            showlegend=True,
+            height=280,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#0f172a")
+        )
         st.plotly_chart(fig_pie1, use_container_width=True)
 
     with g2:
@@ -329,9 +337,17 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 values="Frecuencia",
                 title="Servicios Afectados",
                 color_discrete_sequence=px.colors.sequential.Teal,
-                hole=0.4
+                hole=0.4,
+                template="plotly_white"
             )
-            fig_pie2.update_layout(margin=dict(t=40, b=0, l=0, r=0), showlegend=True, height=280)
+            fig_pie2.update_layout(
+                margin=dict(t=40, b=0, l=0, r=0),
+                showlegend=True,
+                height=280,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#0f172a")
+            )
             st.plotly_chart(fig_pie2, use_container_width=True)
         else:
             st.info("Sin registros de servicios afectados.")
@@ -357,9 +373,17 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             title="Riesgo para las Personas",
             color="Nivel de Riesgo",
             color_discrete_map=colors_map,
-            hole=0.4
+            hole=0.4,
+            template="plotly_white"
         )
-        fig_pie3.update_layout(margin=dict(t=40, b=0, l=0, r=0), showlegend=True, height=280)
+        fig_pie3.update_layout(
+            margin=dict(t=40, b=0, l=0, r=0),
+            showlegend=True,
+            height=280,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#0f172a")
+        )
         st.plotly_chart(fig_pie3, use_container_width=True)
 
     st.markdown("---")
@@ -382,9 +406,17 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             y="Total Emergencias",
             color="Nivel de Afectación",
             color_discrete_map={"Crítica": "#dc2626", "Critica": "#dc2626", "Alta": "#d97706", "Media": "#0284c7", "Baja": "#16a34a"},
-            text_auto=True
+            text_auto=True,
+            template="plotly_white"
         )
-        fig_bar.update_layout(margin=dict(t=20, b=0, l=0, r=0), height=300, showlegend=False)
+        fig_bar.update_layout(
+            margin=dict(t=20, b=0, l=0, r=0),
+            height=300,
+            showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#0f172a")
+        )
         st.plotly_chart(fig_bar, use_container_width=True)
 
     with b2:
@@ -407,10 +439,20 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 y="Recurso Requerido",
                 orientation="h",
                 color_discrete_sequence=["#0284c7"],
-                text_auto=True
+                text_auto=True,
+                template="plotly_white"
             )
-            fig_req.update_layout(margin=dict(t=20, b=0, l=0, r=0), height=300)
+            fig_req.update_layout(
+                margin=dict(t=20, b=0, l=0, r=0),
+                height=300,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#0f172a")
+            )
             st.plotly_chart(fig_req, use_container_width=True)
+        else:
+            st.info("Sin solicitudes de maquinaria registradas.")
+
         else:
             st.info("Sin solicitudes de maquinaria registradas.")
 
