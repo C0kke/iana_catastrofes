@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import st_folium
 from typing import Optional, Tuple, List, Dict, Any
 
-COQUIMBO_DEFAULT_CENTER = (-29.9533, -71.3395)  # Coquimbo / La Serena
+COQUIMBO_DEFAULT_CENTER = (-29.9533, -71.3395)
 
 def render_location_picker_map(
     initial_lat: Optional[float] = None,

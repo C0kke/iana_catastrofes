@@ -19,8 +19,7 @@ def render_sidebar():
 
         st.markdown("---")
         
-        # Botón para volver al Inicio / Mapa General
-        if st.button("🏠 Inicio / Mapa General", use_container_width=True):
+        if st.button("Inicio / Mapa General", use_container_width=True):
             st.session_state["active_project"] = None
             st.rerun()
 

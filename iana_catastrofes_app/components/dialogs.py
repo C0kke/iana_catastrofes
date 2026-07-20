@@ -15,13 +15,6 @@ except ModuleNotFoundError:
         from components.map_component import render_location_picker_map
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REGIONES_PATH = os.path.join(BASE_DIR, "knowledge", "regiones.json")
-
-def load_regiones_data():
-    if os.path.exists(REGIONES_PATH):
-        with open(REGIONES_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {"regions": []}
 
 PROJECT_CATEGORY_OPTIONS = [
     "Grandes Ítems",
