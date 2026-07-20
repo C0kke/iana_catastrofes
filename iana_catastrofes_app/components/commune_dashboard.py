@@ -453,9 +453,6 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
         else:
             st.info("Sin solicitudes de maquinaria registradas.")
 
-        else:
-            st.info("Sin solicitudes de maquinaria registradas.")
-
     st.markdown("---")
 
     # 4. Generación y Exportación de Informes Ejecutivos por Entidad en PDF
