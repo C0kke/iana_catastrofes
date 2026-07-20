@@ -123,7 +123,7 @@ def render_new_project_dialog():
     with col_reg:
         selected_region = st.selectbox("Región", options=["Coquimbo"], index=0, disabled=True)
     with col_com:
-        selected_commune = st.selectbox("Comuna", options=COMMUNES_COQUIMBO, index=1)
+        selected_commune = st.selectbox("Comuna", options=COMMUNES_COQUIMBO, index=0)
 
     # Georeferenciación interactiva en mapa
     st.markdown("#### GEORREFERENCIACIÓN Y UBICACIÓN EN MAPA")
@@ -358,9 +358,9 @@ def render_edit_project_dialog(project: dict):
             except Exception as e:
                 st.error(f"Error al actualizar la emergencia: {e}")
 
-@st.dialog("Registrar Nuevo Punto Crítico / Ruta Cortada")
 def render_new_critical_point_dialog():
     """Modal para registrar un nuevo Punto Crítico o Ruta Cortada."""
+    st.markdown("### Registrar Nuevo Punto Crítico / Ruta Cortada")
     st.caption("Ingresa la ubicación, gravedad y tipo de interrupción vial o peligro inminente.")
 
     if st.button("Cancelar Registro", key="cancel_cp_dialog_btn"):
@@ -434,11 +434,9 @@ def render_new_critical_point_dialog():
             except Exception as e:
                 st.error(f"Error al guardar punto crítico: {e}")
 
-@st.dialog("Editar Punto Crítico")
 def render_edit_critical_point_dialog(cp: dict):
     """Modal para editar o cambiar estado de un Punto Crítico existente."""
     cp_id = cp.get("id")
-
     st.markdown(f"### Editar Punto Crítico: {cp.get('name', 'Punto Crítico')}")
 
     if st.button("Cerrar Edición", key="close_edit_cp_btn"):

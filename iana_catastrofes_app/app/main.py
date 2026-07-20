@@ -77,7 +77,7 @@ def health_check():
 
 @app.get("/api/weather/{commune}")
 def get_commune_weather(commune: str):
-    """Obtiene el reporte meteorológico en vivo y pronóstico (-1d a +3d) para una comuna de Coquimbo."""
+    """Obtiene el reporte meteorológico en vivo y pronóstico para una comuna de Coquimbo."""
     return get_extended_weather_report(commune)
 
 @app.post("/api/upload")

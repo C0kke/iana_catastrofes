@@ -219,34 +219,16 @@ def analyze_single_document(
     model_name: str = DEFAULT_MODEL
 ) -> DocumentSpecificAnalysis:
     """Analiza un documento de texto, Word o fotografía a través de la IA.
-    El contexto proviene exclusivamente de los datos de la emergencia registrada por el usuario."""
-    if not client:
+    El contexto proviene exclusivamente de los datos de la emergencia registrada por el usuario.
+    Distingue automáticamente entre evidencia fotográfica de terreno e informes oficiales (Informe Alfa, fichas, etc.)."""
+    if not genai_client:
         raise RuntimeError("El cliente de análisis no está configurado. Revisa la clave")
 
     emergency_context = build_project_context(project_data)
 
-    content_list = []
-    prompt_text = f"""
-    Eres un Evaluador Senior de Emergencias Municipales de la Región de Coquimbo, Chile.
-    Analiza la evidencia ingresada (Tipo: {document_type}) bajo el contexto del temporal de lluvias y vientos en Coquimbo.
-
-    --- DATOS REGISTRADOS DE ESTA EMERGENCIA ---
-    {emergency_context}
-
-    --- ANTECEDENTES EXTRAÍDOS DE LA EVIDENCIA ---
-    {file_content_text}
-
-    Instrucciones:
-    1. Si se incluye una imagen/fotografía, analiza visualmente los daños (inundación, desborde, caídas de postes/árboles, daño estructural, fallas de red eléctrica o agua potable).
-    2. Clasifica el 'detected_affectation_level' en: 'Baja', 'Media', 'Alta' o 'Crítica'.
-    3. Clasifica el 'detected_people_risk' en: 'Sin riesgo', 'Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto' o 'Riesgo Inminente'.
-    4. NO utilices porcentajes bajo ninguna circunstancia.
-    5. Extrae las alertas y metadatos con la mayor precisión operativa posible.
-    6. Basa tu análisis EXCLUSIVAMENTE en los datos de esta emergencia y la evidencia adjunta. No asumas contexto externo.
-    """
-
-    content_list.append(prompt_text)
-
+    # Detectar si hay imagen adjunta
+    has_image = False
+    image_part = None
     if file_path and os.path.exists(file_path):
         ext = os.path.splitext(file_path)[1].lower()
         if ext in [".jpg", ".jpeg", ".png", ".webp"]:
@@ -256,23 +238,80 @@ def analyze_single_document(
                 img_format = img.format if img.format else "PNG"
                 img.save(img_byte_arr, format=img_format)
                 img_bytes = img_byte_arr.getvalue()
-                
+
                 mime_type = f"image/{img_format.lower()}"
                 if mime_type == "image/jpg":
                     mime_type = "image/jpeg"
 
                 image_part = types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
-                content_list.append(image_part)
+                has_image = True
             except Exception as e:
-                print(f"Error procesando imagen para: {e}")
+                print(f"Error procesando imagen: {e}")
 
-    res = client.chat.completions.create(
+    # Esquema JSON esperado para la respuesta estructurada
+    json_schema = '''{
+  "document_summary": "string (resumen conciso, máx 300 palabras)",
+  "is_valid_architectural_doc": true/false,
+  "detected_affectation_level": "'Baja' | 'Media' | 'Alta' | 'Crítica'",
+  "detected_people_risk": "'Sin riesgo' | 'Riesgo Bajo' | 'Riesgo Medio' | 'Riesgo Alto' | 'Riesgo Inminente'",
+  "infractions": [{"rule_id": "string", "description": "string", "severity": "'CRÍTICA'|'ALTA'|'MEDIA'|'BAJA'", "evidence": "string", "justification": "string"}],
+  "extracted_metadata": [{"key": "string", "value": "string"}]
+}'''
+
+    prompt_text = f"""Eres un Evaluador Senior de Emergencias Municipales de la Región de Coquimbo, Chile.
+Analiza la evidencia ingresada (Tipo declarado: {document_type}) bajo el contexto del temporal de lluvias y vientos en Coquimbo.
+
+--- DATOS REGISTRADOS DE ESTA EMERGENCIA ---
+{emergency_context}
+
+--- ANTECEDENTES EXTRAÍDOS DE LA EVIDENCIA ---
+{file_content_text}
+
+INSTRUCCIONES DE CLASIFICACIÓN DEL DOCUMENTO:
+Primero, determina la NATURALEZA del archivo adjunto:
+A) **Evidencia Fotográfica de Terreno**: Fotografías tomadas en campo que muestran daños visibles (inundación, desborde, socavón, caída de postes/árboles, daño estructural, fallas de red eléctrica o agua potable). Para estas, analiza visualmente cada daño observable.
+B) **Informe Oficial / Documento Técnico**: Documentos como Informe Alfa, fichas EDAN, reportes SENAPRED, partes policiales, fichas SAMU o informes Word. Para estos, extrae datos estadísticos clave (personas afectadas, viviendas dañadas, recursos desplegados, necesidades evaluadas) y clasifícalos como metadatos estructurados.
+C) **Fotografía de Documento/Informe**: Si la imagen es una CAPTURA o FOTO de un documento impreso (Informe Alfa, formulario, tabla), NO analices daños visuales; en su lugar lee y extrae todo el texto y datos del documento fotografiado (cifras, fechas, clasificaciones, recursos solicitados).
+
+INSTRUCCIONES DE ANÁLISIS:
+1. Clasifica el 'detected_affectation_level' en: 'Baja', 'Media', 'Alta' o 'Crítica'.
+2. Clasifica el 'detected_people_risk' en: 'Sin riesgo', 'Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto' o 'Riesgo Inminente'.
+3. NO utilices porcentajes bajo ninguna circunstancia.
+4. Extrae las alertas y metadatos con la mayor precisión operativa posible.
+5. Basa tu análisis EXCLUSIVAMENTE en los datos de esta emergencia y la evidencia adjunta.
+6. En el 'document_summary', indica explícitamente si el documento es evidencia fotográfica de terreno, un informe oficial, o una foto de documento.
+
+Responde ÚNICAMENTE con un JSON válido con este esquema (sin bloques de código markdown):
+{json_schema}"""
+
+    # Construir contenido multimodal para genai nativo
+    content_parts = [prompt_text]
+    if has_image and image_part:
+        content_parts.append(image_part)
+
+    # Usar el cliente genai nativo directamente (soporta types.Part para imágenes)
+    response = genai_client.models.generate_content(
         model=model_name,
-        response_model=DocumentSpecificAnalysis,
-        messages=[{"role": "user", "content": content_list}],
-        temperature=0.1
+        contents=content_parts,
+        config=types.GenerateContentConfig(
+            temperature=0.1,
+            response_mime_type="application/json"
+        )
     )
-    return res
+
+    # Parsear la respuesta JSON a nuestro modelo Pydantic
+    raw_text = response.text.strip()
+    try:
+        parsed = json.loads(raw_text)
+    except json.JSONDecodeError:
+        # Intentar extraer JSON de bloques de código markdown
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', raw_text)
+        if json_match:
+            parsed = json.loads(json_match.group(1))
+        else:
+            raise ValueError(f"No se pudo parsear la respuesta de IA como JSON: {raw_text[:500]}")
+
+    return DocumentSpecificAnalysis(**parsed)
 
 def consolidate_accident_evaluation(
     previous_context: str,
