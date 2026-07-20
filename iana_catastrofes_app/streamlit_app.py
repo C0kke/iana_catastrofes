@@ -34,7 +34,7 @@ except ModuleNotFoundError:
 INDEX_CSS_PATH = os.path.join(BASE_DIR, "index.css")
 
 st.set_page_config(
-    page_title=f"Chatbot Emergencia v{__version__} - Centro de Mando",
+    page_title=f"Emergencias",
     layout="wide",
     initial_sidebar_state="expanded"
 )

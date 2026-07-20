@@ -104,9 +104,6 @@ def render_new_project_dialog():
         address = st.text_input("DIRECCIÓN DE LA SOLICITUD *", placeholder="Ingresa la calle / altura")
     with c_sec:
         sector = st.text_input("SECTOR *", placeholder="Ej: Sector Las Compañías, San Juan, Parte Alta")
-
-    regiones_data = load_regiones_data()
-    regions_list = [r["name"] for r in regiones_data.get("regions", [])]
     
     coquimbo_idx = 0
     if "Coquimbo" in regions_list:
@@ -117,9 +114,6 @@ def render_new_project_dialog():
         selected_region = st.selectbox("Región", options=regions_list if regions_list else ["Coquimbo"], index=coquimbo_idx)
     
     communes_list = []
-    selected_region_obj = next((r for r in regiones_data.get("regions", []) if r["name"] == selected_region), None)
-    if selected_region_obj:
-        communes_list = [c["name"] for c in selected_region_obj.get("communes", [])]
 
     with col_com:
         selected_commune = st.selectbox("Comuna", options=communes_list if communes_list else ["La Serena", "Coquimbo", "Ovalle", "Vicuña", "Illapel", "Los Vilos"])

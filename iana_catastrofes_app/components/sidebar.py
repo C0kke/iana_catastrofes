@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 
 def render_sidebar():
     with st.sidebar:
-        st.markdown("<h2 style='color: var(--blue-title); font-weight: 800; margin-bottom: 0;'>CHATBOT EMERGENCIA</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: var(--blue-title); font-weight: 800; margin-bottom: 0;'>EMERGENCIAS</h2>", unsafe_allow_html=True)
         st.caption("Sistema Abierto de Registro y Gestión de Emergencias")
         st.divider()
 

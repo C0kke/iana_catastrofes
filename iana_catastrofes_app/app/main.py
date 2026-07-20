@@ -42,7 +42,7 @@ except ModuleNotFoundError:
         )
 
 app = FastAPI(
-    title=f"Chatbot Emergencia API v{__version__}",
+    title=f"Emergencias Coquimbo v{__version__}",
     description="API de Análisis en Tiempo Real para Emergencias"
 )
 
