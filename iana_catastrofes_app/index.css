@@ -49,7 +49,9 @@ div[role="dialog"] {
 
 div[data-testid="stHeader"],
 header[data-testid="stHeader"],
-.stAppHeader {
+.stAppHeader,
+.stAppToolbar,
+div[data-testid="stAppToolbar"] {
     background-color: transparent !important;
     background: transparent !important;
     border: none !important;
@@ -71,20 +73,14 @@ button[aria-label*="Sidebar"] {
     z-index: 999999 !important;
 }
 
-/* OCULTAR ÚNICAMENTE LA TOOLBAR DERECHA (Share, Star, Edit, Github, Kebab) Y FOOTER / BADGES */
-div[data-testid="stToolbar"],
 div[data-testid="stToolbarActions"],
 div[data-testid="stToolbarActionButton"],
 div[class*="stToolbarActions"],
-.stAppToolbar,
-.stToolbar,
 .stMainMenu,
-.stToolbarActions,
 .stAppViewerBadge,
 .stViewerBadge,
 .stDeployButton,
 .stAppDeployButton,
-div[data-testid="stAppToolbar"],
 div[data-testid="stMainMenu"],
 div[data-testid="stMainMenuButton"],
 div[data-testid="stAppViewerBadge"],
@@ -111,8 +107,6 @@ a[href*="streamlit.io"] {
     pointer-events: none !important;
     overflow: hidden !important;
 }
-
-
 
 input,
 select,
