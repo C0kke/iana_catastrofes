@@ -16,7 +16,9 @@ try:
         add_document_analysis,
         list_project_documents
     )
+    from chatbot_emergencia_app.app.auth import is_read_only
     from chatbot_emergencia_app.components.map_component import render_location_picker_map
+    from chatbot_emergencia_app.components.dialogs import render_edit_project_dialog
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.pdf_extract import extract_text_from_file
@@ -31,7 +33,9 @@ except ModuleNotFoundError:
             add_document_analysis,
             list_project_documents
         )
+        from iana_catastrofes_app.app.auth import is_read_only
         from iana_catastrofes_app.components.map_component import render_location_picker_map
+        from iana_catastrofes_app.components.dialogs import render_edit_project_dialog
     except ModuleNotFoundError:
         from app.pdf_extract import extract_text_from_file
         from app.rules_engine import evaluate_emergency_rules
@@ -45,7 +49,9 @@ except ModuleNotFoundError:
             add_document_analysis,
             list_project_documents
         )
+        from app.auth import is_read_only
         from components.map_component import render_location_picker_map
+        from components.dialogs import render_edit_project_dialog
 
 DOC_TYPES_MAP = {
     "site_photo": "Evidencia Fotográfica / Terreno",
@@ -58,6 +64,8 @@ DOC_TYPES_MAP = {
 }
 
 def render_project_dashboard():
+    read_only = is_read_only()
+
     project = st.session_state.get("active_project")
     if not project:
         st.warning("No hay ninguna emergencia seleccionada.")
@@ -109,10 +117,14 @@ def render_project_dashboard():
     except Exception:
         chile_time_fmt = chile_time_raw
 
-    # Header de la Emergencia con botones de acción persistentes
+    # Renderizar modal de edición si está activo
+    if st.session_state.get("show_edit_project_dialog", False):
+        render_edit_project_dialog(project)
+
+    # Header de la Emergencia con botones de acción persistentes segun rol
     col_h1, col_h2, col_h3 = st.columns([2.5, 1.2, 1.2])
     with col_h1:
-        status_badge = "✓ TRATADA / SOLUCIONADA" if status in ["tratada", "solucionada"] else "● EMERGENCIA ACTIVA"
+        status_badge = "[TRATADA / SOLUCIONADA]" if status in ["tratada", "solucionada"] else "[EMERGENCIA ACTIVA]"
         badge_bg = "#16a34a" if status in ["tratada", "solucionada"] else "#0284c7"
         st.markdown(f"""
             <div style="background-color: var(--card-bg); border-radius: 10px; padding: 1rem 1.2rem; border: 1px solid var(--card-border); margin-bottom: 0.8rem;">
@@ -128,54 +140,27 @@ def render_project_dashboard():
                 </p>
             </div>
         """, unsafe_allow_html=True)
+
     with col_h2:
-        if st.button("Ejecutar / Reevaluar Análisis con Gemini Vision AI", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente el análisis de la emergencia"):
-            with st.spinner("Ejecutando evaluación y reevaluación con Gemini Vision AI..."):
-                try:
-                    docs = list_project_documents(proj_id)
-                    latest_summary = f"Tipo de Proyecto: {project_category}. " + (description if description else "Emergencia registrada en terreno.")
-                    if docs:
-                        latest_summary += f" Se cuenta con {len(docs)} evidencia(s) registradas."
-
-                    eval_res = consolidate_accident_evaluation(
-                        previous_context=context,
-                        new_doc_summary=latest_summary,
-                        new_doc_infractions=[],
-                        new_doc_metadata=[],
-                        initial_affectation_level=initial_affectation,
-                        initial_people_risk=initial_risk,
-                        previous_infractions=infractions,
-                        previous_metadata=metadata
-                    )
-
-                    update_project_evaluation(
-                        project_id=proj_id,
-                        consolidated_context=eval_res.consolidated_context,
-                        initial_vs_real_risk_evaluation=eval_res.initial_vs_real_risk_evaluation,
-                        real_affectation_level=eval_res.real_affectation_level,
-                        real_people_risk=eval_res.real_people_risk,
-                        overall_alert_level=eval_res.overall_alert_level,
-                        mitigation_actions=eval_res.mitigation_actions,
-                        action_recommendations=eval_res.action_recommendations,
-                        recommended_entities=[e.model_dump() for e in eval_res.recommended_entities],
-                        consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
-                        extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
-                    )
-                    st.success("¡Reevaluación completada exitosamente!")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error en el análisis de Gemini AI: {e}")
-    with col_h3:
-        if status == "activa":
-            if st.button("Marcar Solucionada / Tratada", use_container_width=True):
-                update_project_status(proj_id, "solucionada")
-                st.success("¡Emergencia marcada como Solucionada y archivada!")
+        if not read_only:
+            if st.button("Editar Emergencia", use_container_width=True):
+                st.session_state["show_edit_project_dialog"] = True
                 st.rerun()
         else:
-            if st.button("Reabrir Emergencia", use_container_width=True):
-                update_project_status(proj_id, "activa")
-                st.info("Emergencia reabierta como activa.")
-                st.rerun()
+            st.info("Perfil Jefatura (Modo Monitoreo Executive)")
+
+    with col_h3:
+        if not read_only:
+            if status == "activa":
+                if st.button("Marcar Solucionada / Tratada", use_container_width=True, type="primary"):
+                    update_project_status(proj_id, "solucionada")
+                    st.success("¡Emergencia marcada como Solucionada y archivada!")
+                    st.rerun()
+            else:
+                if st.button("Reabrir Emergencia", use_container_width=True):
+                    update_project_status(proj_id, "activa")
+                    st.info("Emergencia reabierta como activa.")
+                    st.rerun()
 
     # Evaluación en Tiempo Real: Nivel de Afectación & Riesgo para las Personas
     st.markdown("### Evaluación en Tiempo Real de la Emergencia")
@@ -204,7 +189,7 @@ def render_project_dashboard():
         "Ficha de Emergencia",
         "Resumen & Entidades a Derivar",
         "Ubicación y Mapa",
-        "Subir Evidencia (Fotos, Word, PDF)",
+        "Cargar / Procesar Evidencia",
         "Historial Documental"
     ])
 
@@ -300,18 +285,19 @@ def render_project_dashboard():
 
     with tab3:
         st.markdown("#### Georeferenciación y Mapa de la Incidencia")
-        st.write("Visualiza o actualiza la ubicación exacta en el mapa haciendo clic directamente sobre la zona afectada.")
+        st.write("Visualiza o actualiza la ubicación exacta en el mapa de terreno.")
 
         cur_lat = float(lat_val) if lat_val is not None else None
         cur_lng = float(lng_val) if lng_val is not None else None
 
         picked_lat, picked_lng = render_location_picker_map(cur_lat, cur_lng, key_prefix=f"dash_{proj_id}")
 
-        if (picked_lat != cur_lat or picked_lng != cur_lng) and picked_lat is not None and picked_lng is not None:
-            if st.button("Guardar Nuevas Coordenadas en la Emergencia", type="primary"):
-                update_project_coordinates(proj_id, picked_lat, picked_lng)
-                st.success("¡Coordenadas actualizadas exitosamente!")
-                st.rerun()
+        if not read_only:
+            if (picked_lat != cur_lat or picked_lng != cur_lng) and picked_lat is not None and picked_lng is not None:
+                if st.button("Guardar Nuevas Coordenadas en la Emergencia", type="primary"):
+                    update_project_coordinates(proj_id, picked_lat, picked_lng)
+                    st.success("¡Coordenadas actualizadas exitosamente!")
+                    st.rerun()
 
         c_lat, c_lng = st.columns(2)
         with c_lat:
@@ -320,80 +306,83 @@ def render_project_dashboard():
             st.write(f"**Longitud Registrada:** `{lng_val if lng_val is not None else 'No asignada'}`")
 
     with tab4:
-        st.markdown("#### Cargar Evidencia Fotográfica o Documentos Técnicos")
-        st.write("Sube fotografías de terreno (JPG, PNG), informes de Word (.docx) o expedientes PDF. La Inteligencia Artificial analizará las imágenes y texto para actualizar el estado del evento.")
+        st.markdown("#### Cargar y Procesar Evidencia Fotográfica o Documentos")
+        if read_only:
+            st.info("Modo Jefatura / Lectura: Puedes revisar las evidencias procesadas en el 'Historial Documental'. La carga de nuevos archivos está restringida a Operadores de Terreno.")
+        else:
+            st.write("Sube fotografías de terreno (JPG, PNG), informes de Word (.docx) o expedientes PDF. La Inteligencia Artificial analizará las imágenes y texto para actualizar el estado del evento.")
 
-        doc_type = st.selectbox(
-            "Tipo de Evidencia Ingresada",
-            options=list(DOC_TYPES_MAP.keys()),
-            format_func=lambda x: DOC_TYPES_MAP[x]
-        )
+            doc_type = st.selectbox(
+                "Tipo de Evidencia Ingresada",
+                options=list(DOC_TYPES_MAP.keys()),
+                format_func=lambda x: DOC_TYPES_MAP[x]
+            )
 
-        uploaded_files = st.file_uploader(
-            "Selecciona fotografías o archivos (Soporta JPG, PNG, WEBP, DOCX, PDF, TXT)",
-            type=["jpg", "jpeg", "png", "webp", "docx", "pdf", "txt"],
-            accept_multiple_files=True,
-            key="uploader_incident_multi"
-        )
+            uploaded_files = st.file_uploader(
+                "Selecciona fotografías o archivos (Soporta JPG, PNG, WEBP, DOCX, PDF, TXT)",
+                type=["jpg", "jpeg", "png", "webp", "docx", "pdf", "txt"],
+                accept_multiple_files=True,
+                key="uploader_incident_multi"
+            )
 
-        if uploaded_files and st.button("Procesar Nuevas Evidencias con Gemini Vision AI", type="primary"):
-            with st.spinner("Analizando imágenes/documentos y consolidando el estado de la emergencia..."):
-                try:
-                    for uploaded_file in uploaded_files:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{uploaded_file.name}") as tmp:
-                            tmp.write(uploaded_file.getbuffer())
-                            tmp_path = tmp.name
+            if uploaded_files and st.button("Procesar Nuevas Evidencias con Gemini Vision AI", type="primary"):
+                with st.spinner("Analizando imágenes/documentos y consolidando el estado de la emergencia..."):
+                    try:
+                        for uploaded_file in uploaded_files:
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{uploaded_file.name}") as tmp:
+                                tmp.write(uploaded_file.getbuffer())
+                                tmp_path = tmp.name
 
-                        extracted_text = extract_text_from_file(tmp_path)
-                        quick_rules = evaluate_emergency_rules(extracted_text, doc_type)
+                            extracted_text = extract_text_from_file(tmp_path)
+                            quick_rules = evaluate_emergency_rules(extracted_text, doc_type)
 
-                        ai_res = analyze_single_document(
-                            file_content_text=extracted_text,
-                            document_type=doc_type,
-                            file_path=tmp_path
-                        )
-
-                        doc_rec = add_document_to_project(proj_id, uploaded_file.name, doc_type, tmp_path)
-                        if doc_rec.get("id"):
-                            combined_inf = quick_rules + [i.model_dump() for i in ai_res.infractions]
-                            add_document_analysis(
-                                doc_rec["id"],
-                                ai_res.document_summary,
-                                combined_inf,
-                                [m.model_dump() for m in ai_res.extracted_metadata]
+                            ai_res = analyze_single_document(
+                                file_content_text=extracted_text,
+                                document_type=doc_type,
+                                file_path=tmp_path
                             )
 
-                        eval_res = consolidate_accident_evaluation(
-                            previous_context=context,
-                            new_doc_summary=ai_res.document_summary,
-                            new_doc_infractions=ai_res.infractions,
-                            new_doc_metadata=ai_res.extracted_metadata,
-                            initial_affectation_level=initial_affectation,
-                            initial_people_risk=initial_risk,
-                            previous_infractions=infractions,
-                            previous_metadata=metadata
-                        )
+                            doc_rec = add_document_to_project(proj_id, uploaded_file.name, doc_type, tmp_path)
+                            if doc_rec.get("id"):
+                                combined_inf = quick_rules + [i.model_dump() for i in ai_res.infractions]
+                                add_document_analysis(
+                                    doc_rec["id"],
+                                    ai_res.document_summary,
+                                    combined_inf,
+                                    [m.model_dump() for m in ai_res.extracted_metadata]
+                                )
 
-                        update_project_evaluation(
-                            project_id=proj_id,
-                            consolidated_context=eval_res.consolidated_context,
-                            initial_vs_real_risk_evaluation=eval_res.initial_vs_real_risk_evaluation,
-                            real_affectation_level=eval_res.real_affectation_level,
-                            real_people_risk=eval_res.real_people_risk,
-                            overall_alert_level=eval_res.overall_alert_level,
-                            mitigation_actions=eval_res.mitigation_actions,
-                            action_recommendations=eval_res.action_recommendations,
-                            recommended_entities=[e.model_dump() for e in eval_res.recommended_entities],
-                            consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
-                            extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
-                        )
-                        context = eval_res.consolidated_context
+                            eval_res = consolidate_accident_evaluation(
+                                previous_context=context,
+                                new_doc_summary=ai_res.document_summary,
+                                new_doc_infractions=ai_res.infractions,
+                                new_doc_metadata=ai_res.extracted_metadata,
+                                initial_affectation_level=initial_affectation,
+                                initial_people_risk=initial_risk,
+                                previous_infractions=infractions,
+                                previous_metadata=metadata
+                            )
 
-                    st.success("¡Evidencias procesadas y emergencia actualizada exitosamente!")
-                    st.rerun()
+                            update_project_evaluation(
+                                project_id=proj_id,
+                                consolidated_context=eval_res.consolidated_context,
+                                initial_vs_real_risk_evaluation=eval_res.initial_vs_real_risk_evaluation,
+                                real_affectation_level=eval_res.real_affectation_level,
+                                real_people_risk=eval_res.real_people_risk,
+                                overall_alert_level=eval_res.overall_alert_level,
+                                mitigation_actions=eval_res.mitigation_actions,
+                                action_recommendations=eval_res.action_recommendations,
+                                recommended_entities=[e.model_dump() for e in eval_res.recommended_entities],
+                                consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
+                                extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
+                            )
+                            context = eval_res.consolidated_context
 
-                except Exception as e:
-                    st.error(f"Error procesando la evidencia: {e}")
+                        st.success("¡Evidencias procesadas y emergencia actualizada exitosamente!")
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error(f"Error procesando la evidencia: {e}")
 
     with tab5:
         st.markdown("#### Registro Histórico de Evidencias e Imágenes")

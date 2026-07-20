@@ -105,6 +105,59 @@ def create_project(
         data["created_at"] = chile_time
         return data
 
+def update_project_details(
+    project_id: str,
+    name: str,
+    shift_number: str,
+    address: str,
+    sector: str,
+    project_category: str,
+    emergency_types: List[str],
+    description: str,
+    affectation_level: str,
+    people_risk: str,
+    affectations: List[str],
+    requirements_list: List[str],
+    attention_priority: str,
+    observations: str,
+    follow_up: bool,
+    follow_up_responsible: str,
+    region: str,
+    commune: str,
+    latitude: Optional[float],
+    longitude: Optional[float]
+) -> Dict[str, Any]:
+    """Edita y actualiza los datos principales de una emergencia existente."""
+    if not supabase_client or project_id.startswith("local-"):
+        return {}
+    data = {
+        "name": name,
+        "shift_number": shift_number,
+        "address": address,
+        "sector": sector,
+        "project_category": project_category,
+        "emergency_types": emergency_types,
+        "description": description,
+        "affectation_level": affectation_level,
+        "people_risk": people_risk,
+        "affectations": affectations,
+        "requirements_list": requirements_list,
+        "attention_priority": attention_priority,
+        "observations": observations,
+        "follow_up": follow_up,
+        "follow_up_responsible": follow_up_responsible,
+        "region": region,
+        "commune": commune,
+        "latitude": latitude,
+        "longitude": longitude
+    }
+    try:
+        res = supabase_client.table("projects").update(data).eq("id", project_id).execute()
+        return res.data[0] if res.data else {}
+    except Exception as e:
+        print(f"Advertencia al actualizar datos de la emergencia en Supabase: {e}")
+        return {}
+
 def list_projects(status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
     """Obtiene la lista de emergencias registradas opcionalmente filtradas por estado."""
     if not supabase_client:

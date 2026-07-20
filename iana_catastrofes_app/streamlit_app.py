@@ -13,6 +13,7 @@ import streamlit as st
 
 try:
     from chatbot_emergencia_app.app.version import __version__
+    from chatbot_emergencia_app.app.auth import render_login_screen, get_current_user
     from chatbot_emergencia_app.components.sidebar import render_sidebar
     from chatbot_emergencia_app.components.welcome import render_welcome_page
     from chatbot_emergencia_app.components.project_dashboard import render_project_dashboard
@@ -20,12 +21,14 @@ try:
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.version import __version__
+        from iana_catastrofes_app.app.auth import render_login_screen, get_current_user
         from iana_catastrofes_app.components.sidebar import render_sidebar
         from iana_catastrofes_app.components.welcome import render_welcome_page
         from iana_catastrofes_app.components.project_dashboard import render_project_dashboard
         from iana_catastrofes_app.components.dialogs import render_new_project_dialog
     except ModuleNotFoundError:
         from app.version import __version__
+        from app.auth import render_login_screen, get_current_user
         from components.sidebar import render_sidebar
         from components.welcome import render_welcome_page
         from components.project_dashboard import render_project_dashboard
@@ -34,7 +37,7 @@ except ModuleNotFoundError:
 INDEX_CSS_PATH = os.path.join(BASE_DIR, "index.css")
 
 st.set_page_config(
-    page_title=f"Emergencias",
+    page_title=f"Emergencias Coquimbo",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -54,7 +57,14 @@ st.session_state.setdefault("projects", [])
 st.session_state.setdefault("active_project", None)
 st.session_state.setdefault("active_tab", "Centro de Mando")
 st.session_state.setdefault("show_new_project_dialog", False)
+st.session_state.setdefault("show_edit_project_dialog", False)
 st.session_state.setdefault("active_shift", "1")
+
+# Interceptar pantalla de inicio de sesión si no se ha iniciado sesión
+current_user = get_current_user()
+if not current_user:
+    render_login_screen()
+    st.stop()
 
 render_sidebar()
 
