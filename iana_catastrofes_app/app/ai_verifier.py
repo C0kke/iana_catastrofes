@@ -28,6 +28,16 @@ except Exception as e:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INFORME_ALFA_PATH = os.path.join(BASE_DIR, "knowledge", "informe_alfa.json")
 
+def dump_obj(item: Any) -> Dict[str, Any]:
+    """Serializa de forma segura objetos Pydantic o diccionarios."""
+    if hasattr(item, "model_dump"):
+        return item.model_dump()
+    elif isinstance(item, dict):
+        return item
+    elif hasattr(item, "dict"):
+        return item.dict()
+    return {"val": str(item)}
+
 def load_informe_alfa_context() -> str:
     """Carga el Informe Alfa Municipal para incluirlo como contexto oficial."""
     if os.path.exists(INFORME_ALFA_PATH):
@@ -117,7 +127,7 @@ class ConsolidatedProjectEvaluation(BaseModel):
         description="Recomendaciones operativas paso a paso para desplegar las cuadrillas municipales."
     )
     recommended_entities: List[EntityRecommendation] = Field(
-        description="Lista de oficinas y profesionales especializados que deben intervenir (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE, etc.)."
+        description="Lista de oficinas y profesionales especializados que deben intervenir (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE, Aguas del Valle)."
     )
     consolidated_infractions: List[Infraction] = Field(
         description="Lista acumulada de alertas de riesgo activas."
@@ -190,12 +200,12 @@ def analyze_single_document(
 def consolidate_accident_evaluation(
     previous_context: str,
     new_doc_summary: str,
-    new_doc_infractions: List[Infraction],
-    new_doc_metadata: List[MetadataItem],
+    new_doc_infractions: List[Any],
+    new_doc_metadata: List[Any],
     initial_affectation_level: str = "Media",
     initial_people_risk: str = "Riesgo Medio",
-    previous_infractions: List[Infraction] = [],
-    previous_metadata: List[MetadataItem] = [],
+    previous_infractions: List[Any] = [],
+    previous_metadata: List[Any] = [],
     model_name: str = DEFAULT_MODEL
 ) -> ConsolidatedProjectEvaluation:
     """Genera la evaluación consolidada asignando las oficinas exactas de intervención (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE)."""
@@ -226,12 +236,12 @@ def consolidate_accident_evaluation(
     {previous_context}
 
     --- ALERTAS PREVIAS ---
-    {json.dumps([i.model_dump() for i in previous_infractions], ensure_ascii=False)}
+    {json.dumps([dump_obj(i) for i in previous_infractions], ensure_ascii=False)}
 
     --- NUEVA EVIDENCIA INGRESADA ---
     Resumen del reporte/imagen: {new_doc_summary}
-    Alertas detectadas: {json.dumps([i.model_dump() for i in new_doc_infractions], ensure_ascii=False)}
-    Metadatos extraídos: {json.dumps([m.model_dump() for m in new_doc_metadata], ensure_ascii=False)}
+    Alertas detectadas: {json.dumps([dump_obj(i) for i in new_doc_infractions], ensure_ascii=False)}
+    Metadatos extraídos: {json.dumps([dump_obj(m) for m in new_doc_metadata], ensure_ascii=False)}
 
     INSTRUCCIONES CLAVE DE EVALUACIÓN:
     1. Compara el Nivel de Afectación ({initial_affectation_level}) y Riesgo a Personas ({initial_people_risk}) iniciales con los datos REALES observados.

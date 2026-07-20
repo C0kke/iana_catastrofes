@@ -2,14 +2,14 @@ import streamlit as st
 
 try:
     from chatbot_emergencia_app.app.db import list_projects
-    from chatbot_emergencia_app.app.auth import get_current_user, is_read_only
+    from chatbot_emergencia_app.app.auth import get_current_user, is_read_only, logout_user
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.db import list_projects
-        from iana_catastrofes_app.app.auth import get_current_user, is_read_only
+        from iana_catastrofes_app.app.auth import get_current_user, is_read_only, logout_user
     except ModuleNotFoundError:
         from app.db import list_projects
-        from app.auth import get_current_user, is_read_only
+        from app.auth import get_current_user, is_read_only, logout_user
 
 def render_sidebar():
     user = get_current_user()
@@ -31,23 +31,23 @@ def render_sidebar():
                 </div>
             """, unsafe_allow_html=True)
 
-            if st.button("Cerrar Sesión", use_container_width=True):
-                st.session_state.pop("authenticated_user", None)
-                st.session_state.pop("active_project", None)
-                st.rerun()
+            if st.button("Cerrar Sesión", use_container_width=True, key="btn_logout"):
+                logout_user()
 
             st.divider()
 
         # Botón de Registrar Nueva Emergencia (oculto para Jefatura/Solo Lectura)
         if not read_only:
-            if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary"):
+            if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
                 st.session_state["show_new_project_dialog"] = True
 
         st.markdown("---")
         
         # Botón para volver al Inicio / Mapa General
-        if st.button("Inicio / Mapa General", use_container_width=True):
+        if st.button("Inicio / Mapa General", use_container_width=True, key="btn_go_home"):
             st.session_state["active_project"] = None
+            st.session_state["show_new_project_dialog"] = False
+            st.session_state["show_edit_project_dialog"] = False
             st.rerun()
 
         st.markdown("### Emergencias Activas")
@@ -73,6 +73,8 @@ def render_sidebar():
                 
                 if st.button(btn_label, key=f"proj_btn_{proj_id}", use_container_width=True):
                     st.session_state["active_project"] = proj
+                    st.session_state["show_new_project_dialog"] = False
+                    st.session_state["show_edit_project_dialog"] = False
                     st.session_state["active_tab"] = "Centro de Mando"
                     st.rerun()
 
@@ -90,5 +92,7 @@ def render_sidebar():
                 
                 if st.button(btn_label, key=f"proj_btn_res_{proj_id}", use_container_width=True):
                     st.session_state["active_project"] = proj
+                    st.session_state["show_new_project_dialog"] = False
+                    st.session_state["show_edit_project_dialog"] = False
                     st.session_state["active_tab"] = "Centro de Mando"
                     st.rerun()

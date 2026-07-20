@@ -6,7 +6,7 @@ from datetime import datetime
 try:
     from chatbot_emergencia_app.app.pdf_extract import extract_text_from_file
     from chatbot_emergencia_app.app.rules_engine import evaluate_emergency_rules
-    from chatbot_emergencia_app.app.ai_verifier import analyze_single_document, consolidate_accident_evaluation
+    from chatbot_emergencia_app.app.ai_verifier import analyze_single_document, consolidate_accident_evaluation, dump_obj
     from chatbot_emergencia_app.app.db import (
         get_project_by_id,
         update_project_evaluation,
@@ -23,7 +23,7 @@ except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.pdf_extract import extract_text_from_file
         from iana_catastrofes_app.app.rules_engine import evaluate_emergency_rules
-        from iana_catastrofes_app.app.ai_verifier import analyze_single_document, consolidate_accident_evaluation
+        from iana_catastrofes_app.app.ai_verifier import analyze_single_document, consolidate_accident_evaluation, dump_obj
         from iana_catastrofes_app.app.db import (
             get_project_by_id,
             update_project_evaluation,
@@ -39,7 +39,7 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
         from app.pdf_extract import extract_text_from_file
         from app.rules_engine import evaluate_emergency_rules
-        from app.ai_verifier import analyze_single_document, consolidate_accident_evaluation
+        from app.ai_verifier import analyze_single_document, consolidate_accident_evaluation, dump_obj
         from app.db import (
             get_project_by_id,
             update_project_evaluation,
@@ -121,8 +121,8 @@ def render_project_dashboard():
     if st.session_state.get("show_edit_project_dialog", False):
         render_edit_project_dialog(project)
 
-    # Header de la Emergencia con botones de acción persistentes segun rol
-    col_h1, col_h2, col_h3 = st.columns([2.5, 1.2, 1.2])
+    # Header de la Emergencia con botones de acción persistentes
+    col_h1, col_h2, col_h3, col_h4 = st.columns([2.2, 1.4, 1.0, 1.0])
     with col_h1:
         status_badge = "[TRATADA / SOLUCIONADA]" if status in ["tratada", "solucionada"] else "[EMERGENCIA ACTIVA]"
         badge_bg = "#16a34a" if status in ["tratada", "solucionada"] else "#0284c7"
@@ -142,17 +142,53 @@ def render_project_dashboard():
         """, unsafe_allow_html=True)
 
     with col_h2:
+        if st.button("Ejecutar / Reevaluar Análisis con Gemini AI", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
+            with st.spinner("Ejecutando evaluación y reevaluación con Gemini Vision AI..."):
+                try:
+                    docs = list_project_documents(proj_id)
+                    latest_summary = f"Tipo de Proyecto: {project_category}. " + (description if description else "Emergencia registrada en terreno.")
+                    if docs:
+                        latest_summary += f" Se cuenta con {len(docs)} evidencia(s) registradas."
+
+                    eval_res = consolidate_accident_evaluation(
+                        previous_context=context,
+                        new_doc_summary=latest_summary,
+                        new_doc_infractions=[],
+                        new_doc_metadata=[],
+                        initial_affectation_level=initial_affectation,
+                        initial_people_risk=initial_risk,
+                        previous_infractions=infractions,
+                        previous_metadata=metadata
+                    )
+
+                    update_project_evaluation(
+                        project_id=proj_id,
+                        consolidated_context=eval_res.consolidated_context,
+                        initial_vs_real_risk_evaluation=eval_res.initial_vs_real_risk_evaluation,
+                        real_affectation_level=eval_res.real_affectation_level,
+                        real_people_risk=eval_res.real_people_risk,
+                        overall_alert_level=eval_res.overall_alert_level,
+                        mitigation_actions=eval_res.mitigation_actions,
+                        action_recommendations=eval_res.action_recommendations,
+                        recommended_entities=[dump_obj(e) for e in eval_res.recommended_entities],
+                        consolidated_infractions=[dump_obj(i) for i in eval_res.consolidated_infractions],
+                        extracted_metadata=[dump_obj(m) for m in eval_res.extracted_metadata]
+                    )
+                    st.success("¡Reevaluación completada exitosamente!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error en el análisis de Gemini AI: {e}")
+
+    with col_h3:
         if not read_only:
             if st.button("Editar Emergencia", use_container_width=True):
                 st.session_state["show_edit_project_dialog"] = True
                 st.rerun()
-        else:
-            st.info("Perfil Jefatura (Modo Monitoreo Executive)")
 
-    with col_h3:
+    with col_h4:
         if not read_only:
             if status == "activa":
-                if st.button("Marcar Solucionada / Tratada", use_container_width=True, type="primary"):
+                if st.button("Marcar Solucionada", use_container_width=True):
                     update_project_status(proj_id, "solucionada")
                     st.success("¡Emergencia marcada como Solucionada y archivada!")
                     st.rerun()
@@ -344,12 +380,12 @@ def render_project_dashboard():
 
                             doc_rec = add_document_to_project(proj_id, uploaded_file.name, doc_type, tmp_path)
                             if doc_rec.get("id"):
-                                combined_inf = quick_rules + [i.model_dump() for i in ai_res.infractions]
+                                combined_inf = quick_rules + [dump_obj(i) for i in ai_res.infractions]
                                 add_document_analysis(
                                     doc_rec["id"],
                                     ai_res.document_summary,
                                     combined_inf,
-                                    [m.model_dump() for m in ai_res.extracted_metadata]
+                                    [dump_obj(m) for m in ai_res.extracted_metadata]
                                 )
 
                             eval_res = consolidate_accident_evaluation(
@@ -372,9 +408,9 @@ def render_project_dashboard():
                                 overall_alert_level=eval_res.overall_alert_level,
                                 mitigation_actions=eval_res.mitigation_actions,
                                 action_recommendations=eval_res.action_recommendations,
-                                recommended_entities=[e.model_dump() for e in eval_res.recommended_entities],
-                                consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
-                                extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
+                                recommended_entities=[dump_obj(e) for e in eval_res.recommended_entities],
+                                consolidated_infractions=[dump_obj(i) for i in eval_res.consolidated_infractions],
+                                extracted_metadata=[dump_obj(m) for m in eval_res.extracted_metadata]
                             )
                             context = eval_res.consolidated_context
 

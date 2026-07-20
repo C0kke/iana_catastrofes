@@ -33,8 +33,18 @@ def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     return None
 
 def get_current_user() -> Optional[Dict[str, Any]]:
-    """Obtiene el usuario autenticado en la sesión actual."""
-    return st.session_state.get("authenticated_user")
+    """Obtiene el usuario autenticado en la sesión actual, manteniendo la persistencia ante recargas (F5)."""
+    current = st.session_state.get("authenticated_user")
+    if current:
+        return current
+    
+    saved_user_key = st.query_params.get("session_user")
+    if saved_user_key and saved_user_key in USERS_DB:
+        user_obj = USERS_DB[saved_user_key]
+        st.session_state["authenticated_user"] = user_obj
+        return user_obj
+        
+    return None
 
 def is_read_only() -> bool:
     """Retorna True si el usuario actual es Jefatura (solo lectura)."""
@@ -42,6 +52,19 @@ def is_read_only() -> bool:
     if not user:
         return False
     return user.get("role") == "read_only"
+
+def logout_user():
+    """Cierra la sesión activa del usuario y limpia los parámetros de persistencia."""
+    st.session_state.pop("authenticated_user", None)
+    st.session_state.pop("active_project", None)
+    st.session_state["show_new_project_dialog"] = False
+    st.session_state["show_edit_project_dialog"] = False
+    if "session_user" in st.query_params:
+        try:
+            del st.query_params["session_user"]
+        except Exception:
+            pass
+    st.rerun()
 
 def render_login_screen():
     """Renderiza la pantalla de inicio de sesión estilizada."""
@@ -70,6 +93,7 @@ def render_login_screen():
                 user = authenticate_user(username_input, password_input)
                 if user:
                     st.session_state["authenticated_user"] = user
+                    st.query_params["session_user"] = user["username"]
                     st.success(f"Bienvenido {user['name']}")
                     st.rerun()
                 else:

@@ -107,25 +107,22 @@ def render_new_project_dialog():
 
     name = st.text_input("NOMBRE / CÓDIGO DE LA EMERGENCIA *", placeholder="Ej: Anegamiento Sector Balmaceda / Socavón Ruta 41 Vicuña")
 
-    project_category = st.selectbox(
-        "TIPO DE PROYECTO *",
-        options=PROJECT_CATEGORY_OPTIONS,
-        index=1,
-        help="Selecciona la categoría o ítem de la infraestructura afectada"
-    )
-
-    st.markdown("---")
-    c_dir, c_sec = st.columns(2)
-    with c_dir:
-        address = st.text_input("DIRECCIÓN DE LA SOLICITUD *", placeholder="Ingresa la calle / altura")
-    with c_sec:
+    col_cat, col_sec = st.columns(2)
+    with col_cat:
+        project_category = st.selectbox(
+            "TIPO DE PROYECTO *",
+            options=PROJECT_CATEGORY_OPTIONS,
+            index=1,
+            help="Selecciona la categoría o ítem de la infraestructura afectada"
+        )
+    with col_sec:
         sector = st.text_input("SECTOR *", placeholder="Ej: Sector Las Compañías, San Juan, Parte Alta")
 
     col_reg, col_com = st.columns(2)
     with col_reg:
         selected_region = st.selectbox("Región", options=["Coquimbo"], index=0, disabled=True)
     with col_com:
-        selected_commune = st.selectbox("Comuna", options=COMMUNES_COQUIMBO, index=0)
+        selected_commune = st.selectbox("Comuna", options=COMMUNES_COQUIMBO, index=1)
 
     # Georeferenciación interactiva en mapa
     st.markdown("#### GEORREFERENCIACIÓN Y UBICACIÓN EN MAPA")
@@ -138,6 +135,7 @@ def render_new_project_dialog():
     if (picked_lat != cur_lat or picked_lng != cur_lng) and picked_lat is not None and picked_lng is not None:
         st.session_state["dlg_lat"] = picked_lat
         st.session_state["dlg_lng"] = picked_lng
+        st.session_state["show_new_project_dialog"] = True
         st.rerun()
 
     col_lat, col_lng = st.columns(2)
@@ -209,8 +207,8 @@ def render_new_project_dialog():
 
     st.markdown("---")
     if st.button("Guardar e Inicializar Emergencia", type="primary", use_container_width=True):
-        if not name or not address or not sector:
-            st.error("El nombre, la dirección de la solicitud y el sector son obligatorios.")
+        if not name or not sector:
+            st.error("El nombre y el sector son obligatorios.")
         else:
             try:
                 main_type = selected_emergency_types[0].lower().replace(" ", "_") if selected_emergency_types else "other"
@@ -219,7 +217,7 @@ def render_new_project_dialog():
                     name=name,
                     shift_number=shift_number,
                     chile_time=chile_now_str,
-                    address=address,
+                    address=sector,
                     sector=sector,
                     project_category=project_category,
                     project_type=main_type,
@@ -265,17 +263,13 @@ def render_edit_project_dialog(project: dict):
     with col_t2:
         st.text_input("HORA DE REGISTRO", value=project.get("chile_time", ""), disabled=True)
 
-    c_dir, c_sec = st.columns(2)
-    with c_dir:
-        address = st.text_input("DIRECCIÓN DE LA SOLICITUD *", value=project.get("address", ""))
-    with c_sec:
-        sector = st.text_input("SECTOR *", value=project.get("sector", ""))
+    sector = st.text_input("SECTOR *", value=project.get("sector", ""))
 
     col_reg, col_com = st.columns(2)
     with col_reg:
         selected_region = st.selectbox("Región", options=["Coquimbo"], index=0, disabled=True)
 
-    cur_commune = project.get("commune", "La Serena")
+    cur_commune = project.get("commune", "Coquimbo")
     com_idx = COMMUNES_COQUIMBO.index(cur_commune) if cur_commune in COMMUNES_COQUIMBO else 0
     with col_com:
         selected_commune = st.selectbox("Comuna", options=COMMUNES_COQUIMBO, index=com_idx)
@@ -288,6 +282,7 @@ def render_edit_project_dialog(project: dict):
     if (picked_lat != cur_lat or picked_lng != cur_lng) and picked_lat is not None and picked_lng is not None:
         st.session_state["edit_lat"] = picked_lat
         st.session_state["edit_lng"] = picked_lng
+        st.session_state["show_edit_project_dialog"] = True
         st.rerun()
 
     col_lat, col_lng = st.columns(2)
@@ -327,15 +322,15 @@ def render_edit_project_dialog(project: dict):
 
     st.markdown("---")
     if st.button("Guardar Cambios de la Emergencia", type="primary", use_container_width=True):
-        if not name or not address or not sector:
-            st.error("El nombre, la dirección de la solicitud y el sector son obligatorios.")
+        if not name or not sector:
+            st.error("El nombre y el sector son obligatorios.")
         else:
             try:
                 updated_proj = update_project_details(
                     project_id=proj_id,
                     name=name,
                     shift_number=shift_number,
-                    address=address,
+                    address=sector,
                     sector=sector,
                     project_category=project_category,
                     emergency_types=project.get("emergency_types", []),

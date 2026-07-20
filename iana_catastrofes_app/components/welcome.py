@@ -5,15 +5,18 @@ try:
     from chatbot_emergencia_app.app.db import get_chile_now_iso, list_projects
     from chatbot_emergencia_app.app.auth import get_current_user, is_read_only
     from chatbot_emergencia_app.components.map_component import render_emergencies_overview_map
+    from chatbot_emergencia_app.components.commune_dashboard import render_commune_impact_dashboard
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.db import get_chile_now_iso, list_projects
         from iana_catastrofes_app.app.auth import get_current_user, is_read_only
         from iana_catastrofes_app.components.map_component import render_emergencies_overview_map
+        from iana_catastrofes_app.components.commune_dashboard import render_commune_impact_dashboard
     except ModuleNotFoundError:
         from app.db import get_chile_now_iso, list_projects
         from app.auth import get_current_user, is_read_only
         from components.map_component import render_emergencies_overview_map
+        from components.commune_dashboard import render_commune_impact_dashboard
 
 def render_welcome_page():
     user = get_current_user()
@@ -71,7 +74,18 @@ def render_welcome_page():
 
     st.markdown("<br/>", unsafe_allow_html=True)
 
-    tab_mapa, tab_historial = st.tabs(["Mapa de Monitoreo Georreferenciado", "Historial de Emergencias Tratadas / Solucionadas"])
+    if read_only:
+        tab_mapa, tab_historial, tab_dashboard = st.tabs([
+            "Mapa de Monitoreo Georreferenciado",
+            "Historial de Emergencias Tratadas / Solucionadas",
+            "Dashboard de Impacto Comunal (Jefatura)"
+        ])
+    else:
+        tab_mapa, tab_historial = st.tabs([
+            "Mapa de Monitoreo Georreferenciado",
+            "Historial de Emergencias Tratadas / Solucionadas"
+        ])
+        tab_dashboard = None
 
     with tab_mapa:
         st.markdown("### Mapa General de Emergencias - Región de Coquimbo")
@@ -96,25 +110,9 @@ def render_welcome_page():
                         st.session_state["active_project"] = r
                         st.rerun()
 
-    st.markdown("<br/>", unsafe_allow_html=True)
-
-    # Tarjetas de pasos
-    st.markdown("""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-            <div style="background: var(--card-bg); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                <h3 style="color: var(--blue-title); margin-top: 0;">1. Registrar Emergencia Comunal</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Ingresa la comuna (La Serena, Coquimbo, Ovalle, Vicuña, etc.), dirección, sector, coordenadas y requerimientos.</p>
-            </div>
-            <div style="background: var(--card-bg); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                <h3 style="color: var(--blue-title); margin-top: 0;">2. Análisis Multimodal de Evidencia</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Sube fotografías de terreno, informes Word de inspectores o minutas en PDF para procesar el estado real del evento.</p>
-            </div>
-            <div style="background: var(--card-bg); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                <h3 style="color: var(--blue-title); margin-top: 0;">3. Criterios & Despacho de Cuadrillas</h3>
-                <p style="color: var(--text-secondary); font-size: 0.95rem;">Evalúa el Nivel de Afectación y Riesgo a Personas para derivar a CGE (Luz) o Aguas del Valle (Agua/Colectores).</p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    if tab_dashboard:
+        with tab_dashboard:
+            render_commune_impact_dashboard(all_projects)
 
     st.markdown("<br/>", unsafe_allow_html=True)
     st.info("Selecciona una emergencia en el panel lateral para revisar su información detallada.")

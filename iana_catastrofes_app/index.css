@@ -1,36 +1,34 @@
-/* Reglas Generales */
 html,
 body,
 [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !alignment;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Modo Claro (Default Streamlit / Light) */
 :root {
     --app-bg: #ffffff;
     --card-bg: #f8fafc;
-    --card-border: #e2e8f0;
+    --card-border: #cbd5e1;
     --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --text-secondary: #334155;
     --blue-title: #0284c7;
     --blue-accent: #2563eb;
 }
 
-/* Modo Oscuro (Dark Theme) */
 [data-theme="dark"],
+.stApp[data-theme="dark"],
+body[data-theme="dark"],
 @media (prefers-color-scheme: dark) {
     :root {
         --app-bg: #0f172a;
         --card-bg: #1e293b;
         --card-border: #334155;
         --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
+        --text-secondary: #cbd5e1;
         --blue-title: #38bdf8;
         --blue-accent: #60a5fa;
     }
 }
 
-/* Ajustes de Contenedores y Modales */
 .stApp {
     background-color: var(--app-bg) !important;
 }
@@ -40,42 +38,99 @@ section[data-testid="stSidebar"] {
     border-right: 1px solid var(--card-border) !important;
 }
 
-/* Botones sin rojo - Azul y Celeste */
-.stButton>button {
-    border-radius: 6px !important;
-    font-weight: 600 !important;
+div[data-testid="stForm"],
+div[data-testid="stExpander"],
+div[data-testid="stHeader"],
+div[role="dialog"] {
     background-color: var(--card-bg) !important;
-    color: var(--text-primary) !important;
     border: 1px solid var(--card-border) !important;
+    color: var(--text-primary) !important;
+    border-radius: 10px;
 }
 
-.stButton>button[kind="primary"],
-.stButton>button[data-testid="baseButton-primary"] {
+input,
+select,
+textarea,
+div[data-baseweb="select"]>div {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--card-border) !important;
+}
+
+.stButton>button,
+div[data-testid="stFormSubmitButton"]>button,
+button[kind="primary"],
+button[data-testid="baseButton-primary"],
+button[data-testid="baseButton-secondary"],
+button[kind="secondary"] {
+    background-color: #0284c7 !important;
+    color: #ffffff !important;
+    border: 1px solid #0369a1 !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+
+.stButton>button:hover,
+div[data-testid="stFormSubmitButton"]>button:hover,
+button:hover {
+    background-color: #0369a1 !important;
+    border-color: #1e3a8a !important;
+    color: #ffffff !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button {
+    background-color: transparent !important;
+    color: #0284c7 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button:hover {
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[aria-label*="Activa"],
+section[data-testid="stSidebar"] .stButton>button[aria-label*="Ver"],
+section[data-testid="stSidebar"] .stButton>button[aria-label*="[Activa]"] {
+    background-color: transparent !important;
+    color: #0284c7 !important;
+    border: 2px solid #0284c7 !important;
+    font-weight: 800 !important;
+}
+
+[data-theme="dark"] section[data-testid="stSidebar"] .stButton>button {
+    border-color: #475569 !important;
+    color: #38bdf8 !important;
+}
+
+[data-theme="dark"] section[data-testid="stSidebar"] .stButton>button[aria-label*="Activa"],
+[data-theme="dark"] section[data-testid="stSidebar"] .stButton>button[aria-label*="Ver"] {
+    border: 2px solid #38bdf8 !important;
+    color: #38bdf8 !important;
+    font-weight: 800 !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[kind="primary"],
+section[data-testid="stSidebar"] .stButton>button[aria-label*="Registrar Nueva Emergencia"] {
     background-color: #0284c7 !important;
     color: #ffffff !important;
     border: 1px solid #0369a1 !important;
 }
 
-.stButton>button:hover {
-    border-color: var(--blue-accent) !important;
-    color: var(--blue-title) !important;
+/* Prevenir bordes rojos en foco */
+input:focus,
+textarea:focus,
+select:focus,
+div[data-baseweb="select"]:focus-within {
+    border-color: #0284c7 !important;
+    box-shadow: 0 0 0 1px #0284c7 !important;
 }
 
-/* Modales y Ventanas Flotantes */
-div[role="dialog"] {
-    background-color: var(--card-bg) !important;
-    border: 1px solid var(--card-border) !important;
-    color: var(--text-primary) !important;
-}
-
-div[role="dialog"] label,
-div[role="dialog"] p,
-div[role="dialog"] span,
-div[role="dialog"] div {
-    color: var(--text-primary) !important;
-}
-
-/* Titulos y textos */
 h1,
 h2,
 h3,
@@ -87,28 +142,42 @@ h6 {
 
 p,
 span,
-label {
+label,
+div {
     color: var(--text-primary);
 }
 
-/* Tabs */
+/* PESTAÑAS (TABS): Fondo transparente, texto azul oscuro en negrita y subrayado azul */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 6px;
-    background-color: var(--card-bg) !important;
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid var(--card-border);
+    gap: 12px !important;
+    background-color: transparent !important;
+    padding: 0px !important;
+    border-radius: 0px !important;
+    border-bottom: 2px solid var(--card-border) !important;
 }
 
 .stTabs [data-baseweb="tab"] {
-    border-radius: 6px;
+    background-color: transparent !important;
+    border-radius: 0px !important;
+    border: none !important;
     color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    padding: 8px 14px !important;
 }
 
 .stTabs [aria-selected="true"] {
-    background-color: #0284c7 !important;
-    color: #ffffff !important;
-    font-weight: bold;
+    background-color: transparent !important;
+    color: #0284c7 !important;
+    font-weight: 800 !important;
+    border-bottom: 3px solid #0284c7 !important;
+}
+
+[data-theme="dark"] .stTabs [aria-selected="true"],
+@media (prefers-color-scheme: dark) {
+    .stTabs [aria-selected="true"] {
+        color: #38bdf8 !important;
+        border-bottom: 3px solid #38bdf8 !important;
+    }
 }
 
 [data-testid="stMetricValue"] {

@@ -51,6 +51,10 @@ def render_emergencies_overview_map(
     height: int = 440
 ):
     """Renderiza el mapa de monitoreo general con popup interactivo para navegar a la ficha/chat de la emergencia."""
+    
+    # Garantiza que la interacción con el mapa no active el modal de creación de emergencias.
+    st.session_state["show_new_project_dialog"] = False
+
     m = folium.Map(
         location=COQUIMBO_DEFAULT_CENTER,
         zoom_start=9,
@@ -91,7 +95,7 @@ def render_emergencies_overview_map(
                 
                 name = p.get("name", "Emergencia")
                 commune = p.get("commune", "")
-                address = p.get("address", "")
+                sector = p.get("sector", "")
                 
                 popup_html = f"""
                 <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px; padding: 4px;">
@@ -99,7 +103,7 @@ def render_emergencies_overview_map(
                     <small><b>Ítem:</b> {category}</small><br/>
                     <small><b>Estado:</b> {status.upper()}</small><br/>
                     <small><b>Comuna:</b> {commune}</small><br/>
-                    <small><b>Dirección:</b> {address}</small><br/>
+                    <small><b>Sector:</b> {sector}</small><br/>
                     <small><b>Afectación Real:</b> {aff}</small><br/>
                     <small><b>Riesgo Personas:</b> {risk}</small><br/>
                     <small><b>Alerta Global:</b> <span style="font-weight: bold; color: #0284c7;">{alert_text}</span></small><br/>
