@@ -48,9 +48,9 @@ def render_location_picker_map(
 
 def render_emergencies_overview_map(
     projects: List[Dict[str, Any]],
-    height: int = 400
+    height: int = 440
 ):
-    """Renderiza el mapa de monitoreo general sin interrumpir la navegación del usuario."""
+    """Renderiza el mapa de monitoreo general con popup interactivo para navegar a la ficha/chat de la emergencia."""
     m = folium.Map(
         location=COQUIMBO_DEFAULT_CENTER,
         zoom_start=9,
@@ -61,11 +61,13 @@ def render_emergencies_overview_map(
     for p in projects:
         lat = p.get("latitude")
         lng = p.get("longitude")
-        if lat is not None and lng is not None:
+        p_id = p.get("id")
+        if lat is not None and lng is not None and p_id:
             try:
                 lat_f = float(lat)
                 lng_f = float(lng)
                 
+                category = p.get("project_category", "Infraestructura")
                 aff = p.get("real_affectation_level", p.get("affectation_level", "Media"))
                 risk = p.get("real_people_risk", p.get("people_risk", "Riesgo Medio"))
                 status = p.get("status", "activa")
@@ -92,20 +94,26 @@ def render_emergencies_overview_map(
                 address = p.get("address", "")
                 
                 popup_html = f"""
-                <div style="font-family: sans-serif; min-width: 190px;">
-                    <b style="color: #0284c7;">{name}</b><br/>
+                <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 220px; padding: 4px;">
+                    <b style="color: #0284c7; font-size: 1.05rem;">{name}</b><br/>
+                    <small><b>Ítem:</b> {category}</small><br/>
                     <small><b>Estado:</b> {status.upper()}</small><br/>
                     <small><b>Comuna:</b> {commune}</small><br/>
                     <small><b>Dirección:</b> {address}</small><br/>
-                    <small><b>Afectación:</b> {aff}</small><br/>
+                    <small><b>Afectación Real:</b> {aff}</small><br/>
                     <small><b>Riesgo Personas:</b> {risk}</small><br/>
-                    <small><b>Alerta:</b> <span style="font-weight: bold;">{alert_text}</span></small>
+                    <small><b>Alerta Global:</b> <span style="font-weight: bold; color: #0284c7;">{alert_text}</span></small><br/>
+                    <div style="margin-top: 10px; text-align: center;">
+                        <a href="?selected_proj_id={p_id}" target="_self" style="display: inline-block; padding: 6px 14px; background-color: #0284c7; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                            Ir a Control / Chat de Emergencia
+                        </a>
+                    </div>
                 </div>
                 """
                 
                 folium.Marker(
                     location=[lat_f, lng_f],
-                    popup=folium.Popup(popup_html, max_width=260),
+                    popup=folium.Popup(popup_html, max_width=280),
                     tooltip=f"{name} ({aff} - {risk})",
                     icon=folium.Icon(color=color, icon=icon_type)
                 ).add_to(m)
@@ -117,4 +125,21 @@ def render_emergencies_overview_map(
     if valid_markers == 0:
         st.info("Aún no hay emergencias con coordenadas georreferenciadas. Puedes hacer clic al crear o editar una emergencia para ubicarla en el mapa.")
         
-    st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
+    map_data = st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
+
+    # Si se hizo clic en un marcador directamente en la interacción del mapa de Folium
+    if map_data and map_data.get("last_object_clicked"):
+        click_obj = map_data["last_object_clicked"]
+        c_lat = click_obj.get("lat")
+        c_lng = click_obj.get("lng")
+        if c_lat is not None and c_lng is not None:
+            matched_proj = next(
+                (p for p in projects if p.get("latitude") and p.get("longitude") 
+                 and abs(float(p["latitude"]) - c_lat) < 0.0005 
+                 and abs(float(p["longitude"]) - c_lng) < 0.0005),
+                None
+            )
+            if matched_proj:
+                st.session_state["active_project"] = matched_proj
+                st.session_state["show_new_project_dialog"] = False
+                st.rerun()

@@ -14,6 +14,7 @@ import streamlit as st
 try:
     from chatbot_emergencia_app.app.version import __version__
     from chatbot_emergencia_app.app.auth import render_login_screen, get_current_user
+    from chatbot_emergencia_app.app.db import get_project_by_id
     from chatbot_emergencia_app.components.sidebar import render_sidebar
     from chatbot_emergencia_app.components.welcome import render_welcome_page
     from chatbot_emergencia_app.components.project_dashboard import render_project_dashboard
@@ -22,6 +23,7 @@ except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.version import __version__
         from iana_catastrofes_app.app.auth import render_login_screen, get_current_user
+        from iana_catastrofes_app.app.db import get_project_by_id
         from iana_catastrofes_app.components.sidebar import render_sidebar
         from iana_catastrofes_app.components.welcome import render_welcome_page
         from iana_catastrofes_app.components.project_dashboard import render_project_dashboard
@@ -29,6 +31,7 @@ except ModuleNotFoundError:
     except ModuleNotFoundError:
         from app.version import __version__
         from app.auth import render_login_screen, get_current_user
+        from app.db import get_project_by_id
         from components.sidebar import render_sidebar
         from components.welcome import render_welcome_page
         from components.project_dashboard import render_project_dashboard
@@ -59,6 +62,17 @@ st.session_state.setdefault("active_tab", "Centro de Mando")
 st.session_state.setdefault("show_new_project_dialog", False)
 st.session_state.setdefault("show_edit_project_dialog", False)
 st.session_state.setdefault("active_shift", "1")
+
+# Interceptar enlace directo desde el popup del mapa
+param_proj_id = st.query_params.get("selected_proj_id")
+if param_proj_id:
+    proj_obj = get_project_by_id(param_proj_id)
+    if proj_obj:
+        st.session_state["active_project"] = proj_obj
+        st.session_state["show_new_project_dialog"] = False
+        st.session_state["show_edit_project_dialog"] = False
+        st.query_params.clear()
+        st.rerun()
 
 # Interceptar pantalla de inicio de sesión si no se ha iniciado sesión
 current_user = get_current_user()
