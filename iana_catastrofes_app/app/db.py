@@ -304,3 +304,118 @@ def add_document_analysis(
     except Exception as e:
         print(f"Advertencia al agregar análisis en Supabase: {e}")
         return {}
+        
+_LOCAL_CRITICAL_POINTS: List[Dict[str, Any]] = []
+
+def create_critical_point(
+    name: str,
+    commune: str = "Coquimbo",
+    sector: str = "",
+    address: str = "",
+    point_type: str = "ruta_cortada",
+    severity: str = "CRÍTICO",
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    description: str = "",
+    status: str = "activo"
+) -> Dict[str, Any]:
+    """Crea un nuevo Punto Crítico (Ruta Cortada / Peligro Inminente)."""
+    chile_time = get_chile_now_iso()
+    data = {
+        "name": name,
+        "commune": commune,
+        "sector": sector,
+        "address": address,
+        "point_type": point_type,
+        "severity": severity,
+        "status": status,
+        "latitude": latitude,
+        "longitude": longitude,
+        "description": description,
+        "created_at": chile_time
+    }
+
+    if not supabase_client:
+        data["id"] = f"cp-local-{int(datetime.now().timestamp())}"
+        _LOCAL_CRITICAL_POINTS.insert(0, data)
+        return data
+
+    try:
+        res = supabase_client.table("critical_points").insert(data).execute()
+        if res.data:
+            return res.data[0]
+    except Exception as e:
+        print(f"Advertencia al crear punto crítico en Supabase: {e}")
+        data["id"] = f"cp-local-{int(datetime.now().timestamp())}"
+        _LOCAL_CRITICAL_POINTS.insert(0, data)
+        return data
+    return data
+
+def list_critical_points(commune: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Lista todos los Puntos Críticos registrados."""
+    if not supabase_client:
+        if commune and commune != "Todas las Comunas Afectadas":
+            return [p for p in _LOCAL_CRITICAL_POINTS if p.get("commune") == commune]
+        return _LOCAL_CRITICAL_POINTS
+
+    try:
+        query = supabase_client.table("critical_points").select("*").order("created_at", desc=True)
+        if commune and commune != "Todas las Comunas Afectadas":
+            query = query.eq("commune", commune)
+        res = query.execute()
+        db_data = res.data or []
+        return db_data + _LOCAL_CRITICAL_POINTS
+    except Exception as e:
+        print(f"Advertencia al listar puntos críticos desde Supabase: {e}")
+        return _LOCAL_CRITICAL_POINTS
+
+def update_critical_point(
+    point_id: str,
+    name: Optional[str] = None,
+    sector: Optional[str] = None,
+    address: Optional[str] = None,
+    point_type: Optional[str] = None,
+    severity: Optional[str] = None,
+    status: Optional[str] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    description: Optional[str] = None
+) -> Dict[str, Any]:
+    """Actualiza la información de un Punto Crítico existente."""
+    update_data = {}
+    if name is not None: update_data["name"] = name
+    if sector is not None: update_data["sector"] = sector
+    if address is not None: update_data["address"] = address
+    if point_type is not None: update_data["point_type"] = point_type
+    if severity is not None: update_data["severity"] = severity
+    if status is not None: update_data["status"] = status
+    if latitude is not None: update_data["latitude"] = latitude
+    if longitude is not None: update_data["longitude"] = longitude
+    if description is not None: update_data["description"] = description
+
+    if not supabase_client or point_id.startswith("cp-local-"):
+        for p in _LOCAL_CRITICAL_POINTS:
+            if p.get("id") == point_id:
+                p.update(update_data)
+                return p
+        return {}
+
+    try:
+        res = supabase_client.table("critical_points").update(update_data).eq("id", point_id).execute()
+        return res.data[0] if res.data else {}
+    except Exception as e:
+        print(f"Advertencia al actualizar punto crítico en Supabase: {e}")
+        return {}
+
+def delete_critical_point(point_id: str) -> bool:
+    """Elimina o resuelve un Punto Crítico."""
+    global _LOCAL_CRITICAL_POINTS
+    if not supabase_client or point_id.startswith("cp-local-"):
+        _LOCAL_CRITICAL_POINTS = [p for p in _LOCAL_CRITICAL_POINTS if p.get("id") != point_id]
+        return True
+    try:
+        supabase_client.table("critical_points").delete().eq("id", point_id).execute()
+        return True
+    except Exception as e:
+        print(f"Advertencia al eliminar punto crítico en Supabase: {e}")
+        return False

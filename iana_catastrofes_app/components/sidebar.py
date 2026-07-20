@@ -41,9 +41,18 @@ def render_sidebar():
             st.rerun()
 
         if not read_only:
-            if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
-                st.session_state["show_new_project_dialog"] = True
-                st.markdown("---")
+            col_b1, col_b2 = st.columns([1.1, 1.0])
+            with col_b1:
+                if st.button("+ Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
+                    st.session_state["show_new_project_dialog"] = True
+                    st.session_state["show_new_critical_point_dialog"] = False
+                    st.rerun()
+            with col_b2:
+                if st.button("Punto Crítico", use_container_width=True, type="secondary", key="btn_new_cp_trigger"):
+                    st.session_state["show_new_critical_point_dialog"] = True
+                    st.session_state["show_new_project_dialog"] = False
+                    st.rerun()
+            st.markdown("---")
 
         st.markdown("### Emergencias Activas")
         

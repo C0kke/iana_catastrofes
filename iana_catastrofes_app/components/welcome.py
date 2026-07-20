@@ -2,20 +2,20 @@ import streamlit as st
 from datetime import datetime
 
 try:
-    from chatbot_emergencia_app.app.db import get_chile_now_iso, list_projects
+    from chatbot_emergencia_app.app.db import get_chile_now_iso, list_projects, list_critical_points
     from chatbot_emergencia_app.app.auth import get_current_user, is_read_only
     from chatbot_emergencia_app.components.map_component import render_emergencies_overview_map
     from chatbot_emergencia_app.components.commune_dashboard import render_commune_impact_dashboard
     from chatbot_emergencia_app.components.weather_dashboard import render_weather_monitoring_tab
 except ModuleNotFoundError:
     try:
-        from iana_catastrofes_app.app.db import get_chile_now_iso, list_projects
+        from iana_catastrofes_app.app.db import get_chile_now_iso, list_projects, list_critical_points
         from iana_catastrofes_app.app.auth import get_current_user, is_read_only
         from iana_catastrofes_app.components.map_component import render_emergencies_overview_map
         from iana_catastrofes_app.components.commune_dashboard import render_commune_impact_dashboard
         from iana_catastrofes_app.components.weather_dashboard import render_weather_monitoring_tab
     except ModuleNotFoundError:
-        from app.db import get_chile_now_iso, list_projects
+        from app.db import get_chile_now_iso, list_projects, list_critical_points
         from app.auth import get_current_user, is_read_only
         from components.map_component import render_emergencies_overview_map
         from components.commune_dashboard import render_commune_impact_dashboard
@@ -61,6 +61,9 @@ def render_welcome_page():
     st.markdown("<br/>", unsafe_allow_html=True)
 
     all_projects = list_projects()
+    all_cp = list_critical_points()
+    active_cp = [c for c in all_cp if c.get("status", "activo") == "activo"]
+
     active_list = [p for p in all_projects if p.get("status", "activa") == "activa"]
     resolved_list = [p for p in all_projects if p.get("status", "activa") in ["tratada", "solucionada"]]
     critical_list = [p for p in active_list if p.get("real_affectation_level") in ["Crítica", "Critica"] or p.get("real_people_risk") == "Riesgo Inminente"]
@@ -71,7 +74,7 @@ def render_welcome_page():
     with m2:
         st.metric(label="EMERGENCIAS ACTIVAS", value=len(active_list))
     with m3:
-        st.metric(label="CRÍTICAS / RIESGO INMINENTE", value=len(critical_list))
+        st.metric(label="RUTAS CORTADAS / P. CRÍTICOS", value=len(active_cp), delta=f"{len(critical_list)} Críticas", delta_color="inverse")
     with m4:
         st.metric(label="TRATADAS / RESUELTAS", value=len(resolved_list))
 
@@ -93,9 +96,9 @@ def render_welcome_page():
         tab_dashboard = None
 
     with tab_mapa:
-        st.markdown("### Mapa General de Emergencias - Región de Coquimbo")
-        st.caption("Usa el mapa libremente para desplazar, hacer zoom y revisar la distribución geográfica de los eventos.")
-        render_emergencies_overview_map(all_projects, height=480)
+        st.markdown("### Mapa General de Emergencias y Rutas Cortadas - Región de Coquimbo")
+        st.caption("Usa el mapa libremente para desplazar, hacer zoom y revisar la distribución geográfica de eventos y rutas cortadas.")
+        render_emergencies_overview_map(all_projects, critical_points=all_cp, height=480)
 
     with tab_clima:
         render_weather_monitoring_tab()

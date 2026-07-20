@@ -121,3 +121,24 @@ CREATE POLICY "Public full access to documents" ON public.documents FOR ALL USIN
 
 DROP POLICY IF EXISTS "Public full access to document_analyses" ON public.document_analyses;
 CREATE POLICY "Public full access to document_analyses" ON public.document_analyses FOR ALL USING (true) WITH CHECK (true);
+
+-- Tabla: critical_points (Puntos Críticos / Rutas Cortadas)
+CREATE TABLE IF NOT EXISTS public.critical_points (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    commune VARCHAR(100) NOT NULL DEFAULT 'Coquimbo',
+    sector VARCHAR(100),
+    address VARCHAR(255),
+    point_type VARCHAR(100) DEFAULT 'ruta_cortada',
+    severity VARCHAR(50) DEFAULT 'CRÍTICO',
+    status VARCHAR(50) DEFAULT 'activo',
+    latitude NUMERIC(10, 8),
+    longitude NUMERIC(11, 8),
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_critical_points_commune ON public.critical_points(commune);
+ALTER TABLE public.critical_points ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public full access to critical_points" ON public.critical_points;
+CREATE POLICY "Public full access to critical_points" ON public.critical_points FOR ALL USING (true) WITH CHECK (true);

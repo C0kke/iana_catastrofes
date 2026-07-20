@@ -48,9 +48,10 @@ def render_location_picker_map(
 
 def render_emergencies_overview_map(
     projects: List[Dict[str, Any]],
+    critical_points: List[Dict[str, Any]] = [],
     height: int = 440
 ):
-    """Renderiza el mapa de monitoreo general con popup interactivo para navegar a la ficha/chat de la emergencia."""
+    """Renderiza el mapa de monitoreo general con emergencias y marcadores 'X' de Puntos Críticos / Rutas Cortadas."""
     
     # Garantiza que la interacción con el mapa no active el modal de creación de emergencias.
     st.session_state["show_new_project_dialog"] = False
@@ -62,6 +63,7 @@ def render_emergencies_overview_map(
     )
 
     valid_markers = 0
+    
     for p in projects:
         lat = p.get("latitude")
         lng = p.get("longitude")
@@ -126,12 +128,50 @@ def render_emergencies_overview_map(
             except Exception as e:
                 pass
 
+    for cp in critical_points:
+        cp_lat = cp.get("latitude")
+        cp_lng = cp.get("longitude")
+        if cp_lat is not None and cp_lng is not None:
+            try:
+                cp_lat_f = float(cp_lat)
+                cp_lng_f = float(cp_lng)
+                cp_name = cp.get("name", "Punto Crítico")
+                cp_type = cp.get("point_type", "Ruta Cortada")
+                cp_sev = cp.get("severity", "CRÍTICO")
+                cp_desc = cp.get("description", "")
+                cp_commune = cp.get("commune", "")
+                cp_sector = cp.get("sector", "")
+                cp_status = cp.get("status", "activo")
+
+                cp_popup = f"""
+                <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 210px; padding: 4px;">
+                    <b style="color: #dc2626; font-size: 1.05rem;">RUTA CORTADA / PUNTO CRÍTICO</b><br/>
+                    <b>{cp_name}</b><br/>
+                    <small><b>Tipo:</b> {cp_type}</small><br/>
+                    <small><b>Severidad:</b> <span style="color: #dc2626; font-weight: bold;">{cp_sev}</span></small><br/>
+                    <small><b>Ubicación:</b> {cp_commune} ({cp_sector})</small><br/>
+                    <small><b>Estado:</b> {cp_status.upper()}</small><br/>
+                    <p style="margin-top: 6px; font-size: 0.82rem; color: #475569;">{cp_desc}</p>
+                </div>
+                """
+
+                folium.Marker(
+                    location=[cp_lat_f, cp_lng_f],
+                    popup=folium.Popup(cp_popup, max_width=280),
+                    tooltip=f"RUTA CORTADA: {cp_name} ({cp_commune})",
+                    icon=folium.Icon(color="gray" if cp_status == "resuelto" else "darkred", icon="remove", prefix="glyphicon")
+                ).add_to(m)
+                
+                valid_markers += 1
+            except Exception as e:
+                pass
+
     if valid_markers == 0:
-        st.info("Aún no hay emergencias con coordenadas georreferenciadas. Puedes hacer clic al crear o editar una emergencia para ubicarla en el mapa.")
+        st.info("Aún no hay emergencias ni puntos críticos georreferenciados en el mapa.")
+
         
     map_data = st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
 
-    # Si se hizo clic en un marcador directamente en la interacción del mapa de Folium
     if map_data and map_data.get("last_object_clicked"):
         click_obj = map_data["last_object_clicked"]
         c_lat = click_obj.get("lat")

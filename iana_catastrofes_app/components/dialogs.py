@@ -4,14 +4,14 @@ import streamlit as st
 from datetime import datetime
 
 try:
-    from chatbot_emergencia_app.app.db import create_project, update_project_details, get_chile_now_iso
+    from chatbot_emergencia_app.app.db import create_project, update_project_details, get_chile_now_iso, create_critical_point, update_critical_point
     from chatbot_emergencia_app.components.map_component import render_location_picker_map
 except ModuleNotFoundError:
     try:
-        from iana_catastrofes_app.app.db import create_project, update_project_details, get_chile_now_iso
+        from iana_catastrofes_app.app.db import create_project, update_project_details, get_chile_now_iso, create_critical_point, update_critical_point
         from iana_catastrofes_app.components.map_component import render_location_picker_map
     except ModuleNotFoundError:
-        from app.db import create_project, update_project_details, get_chile_now_iso
+        from app.db import create_project, update_project_details, get_chile_now_iso, create_critical_point, update_critical_point
         from components.map_component import render_location_picker_map
 
 COMMUNES_COQUIMBO = [
@@ -357,3 +357,127 @@ def render_edit_project_dialog(project: dict):
                 st.rerun()
             except Exception as e:
                 st.error(f"Error al actualizar la emergencia: {e}")
+
+def render_new_critical_point_dialog():
+    """Modal para registrar un nuevo Punto Crítico o Ruta Cortada."""
+    st.markdown("### Registrar Nuevo Punto Crítico / Ruta Cortada")
+    st.caption("Ingresa la ubicación, gravedad y tipo de interrupción vial o peligro inminente.")
+
+    if st.button("Cancelar Registro", key="cancel_cp_dialog_btn"):
+        st.session_state["show_new_critical_point_dialog"] = False
+        st.session_state.pop("cp_new_lat", None)
+        st.session_state.pop("cp_new_lng", None)
+        st.rerun()
+
+    name = st.text_input("NOMBRE / IDENTIFICADOR DEL PUNTO CRÍTICO *", placeholder="Ej: Ruta D-43 Km 15 - Socavón Masivo")
+    
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        selected_commune = st.selectbox("COMUNA *", options=COMMUNES_COQUIMBO, index=0, key="cp_commune_sel")
+    with col_c2:
+        sector = st.text_input("SECTOR / SEÑALIZACIÓN *", placeholder="Ej: Pan de Azúcar / Cruce Ruta 43")
+
+    address = st.text_input("DIRECCIÓN / REFERENCIA", placeholder="Ej: Av. Costanera con Peñuelas")
+
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        point_type = st.selectbox(
+            "TIPO DE AFECTACIÓN VIAL / CRÍTICA *",
+            options=["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "otro"],
+            index=0
+        )
+    with col_t2:
+        severity = st.selectbox(
+            "SEVERIDAD *",
+            options=["CRÍTICO", "ALTO", "MEDIO", "BAJO"],
+            index=0
+        )
+
+    description = st.text_area("DESCRIPCIÓN DE LA INTERRUPCIÓN Y RIESGO INMINENTE *", placeholder="Detalla si el tránsito está 100% cortado, riesgos para personas y maquinaria requerida.")
+
+    st.markdown("#### Georreferenciación en Terreno (Opcional)")
+    cur_lat = st.session_state.get("cp_new_lat")
+    cur_lng = st.session_state.get("cp_new_lng")
+    
+    pick_lat, pick_lng = render_location_picker_map(initial_lat=cur_lat, initial_lng=cur_lng, key_prefix="cp_new_picker")
+    if pick_lat != cur_lat or pick_lng != cur_lng:
+        st.session_state["cp_new_lat"] = pick_lat
+        st.session_state["cp_new_lng"] = pick_lng
+        cur_lat, cur_lng = pick_lat, pick_lng
+
+    if cur_lat and cur_lng:
+        st.success(f"Coordenadas fijadas: {cur_lat}, {cur_lng}")
+
+    st.markdown("---")
+    if st.button("Guardar Punto Crítico", type="primary", use_container_width=True, key="save_cp_btn"):
+        if not name or not sector or not description:
+            st.error("El nombre, sector y descripción son obligatorios.")
+        else:
+            try:
+                cp = create_critical_point(
+                    name=name,
+                    commune=selected_commune,
+                    sector=sector,
+                    address=address,
+                    point_type=point_type,
+                    severity=severity,
+                    latitude=cur_lat,
+                    longitude=cur_lng,
+                    description=description,
+                    status="activo"
+                )
+                st.success("¡Punto Crítico registrado e ingresado al mapa correctamente!")
+                st.session_state["show_new_critical_point_dialog"] = False
+                st.session_state.pop("cp_new_lat", None)
+                st.session_state.pop("cp_new_lng", None)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al guardar punto crítico: {e}")
+
+def render_edit_critical_point_dialog(cp: dict):
+    """Modal para editar o cambiar estado de un Punto Crítico existente."""
+    cp_id = cp.get("id")
+    st.markdown(f"### Editar Punto Crítico: {cp.get('name', 'Punto Crítico')}")
+
+    if st.button("Cerrar Edición", key="close_edit_cp_btn"):
+        st.session_state["active_edit_cp"] = None
+        st.rerun()
+
+    name = st.text_input("NOMBRE *", value=cp.get("name", ""))
+    sector = st.text_input("SECTOR *", value=cp.get("sector", ""))
+    address = st.text_input("DIRECCIÓN / REFERENCIA", value=cp.get("address", ""))
+    
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        cur_type = cp.get("point_type", "ruta_cortada")
+        type_opts = ["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "otro"]
+        t_idx = type_opts.index(cur_type) if cur_type in type_opts else 0
+        point_type = st.selectbox("TIPO DE AFECTACIÓN", options=type_opts, index=t_idx)
+
+    with col_t2:
+        cur_status = cp.get("status", "activo")
+        st_opts = ["activo", "en_mitigacion", "resuelto"]
+        s_idx = st_opts.index(cur_status) if cur_status in st_opts else 0
+        status = st.selectbox("ESTADO", options=st_opts, index=s_idx)
+
+    description = st.text_area("DESCRIPCIÓN", value=cp.get("description", ""))
+
+    st.markdown("---")
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        if st.button("Guardar Cambios del Punto Crítico", type="primary", use_container_width=True):
+            try:
+                update_critical_point(
+                    point_id=cp_id,
+                    name=name,
+                    sector=sector,
+                    address=address,
+                    point_type=point_type,
+                    status=status,
+                    description=description
+                )
+                st.success("¡Punto crítico actualizado!")
+                st.session_state["active_edit_cp"] = None
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error al actualizar: {e}")
