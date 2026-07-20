@@ -83,11 +83,14 @@ async def upload_document(
         
     extracted_text = extract_text_from_file(file_path)
 
+    # Obtener datos del proyecto para usarlos como contexto de IA
+    proj = get_project_by_id(project_id) if project_id else None
+
     # Reglas automáticas rápidas
     quick_rules = evaluate_emergency_rules(extracted_text, document_type)
     
-    # Análisis IA con Gemini
-    ai_doc_result = analyze_single_document(extracted_text, document_type, file_path=file_path)
+    # Análisis IA con Gemini (contexto basado en datos de la emergencia)
+    ai_doc_result = analyze_single_document(extracted_text, document_type, file_path=file_path, project_data=proj)
     
     # Combinar alertas
     all_infractions = quick_rules + [i.model_dump() for i in ai_doc_result.infractions]
@@ -107,32 +110,31 @@ async def upload_document(
         json.dump(res_data, f, ensure_ascii=False, indent=2)
         
     # Actualizar emergencia en Supabase si project_id está presente
-    if project_id:
-        proj = get_project_by_id(project_id)
-        if proj:
-            doc_rec = add_document_to_project(project_id, file.filename, document_type, file_path)
-            if doc_rec.get("id"):
-                add_document_analysis(doc_rec["id"], ai_doc_result.document_summary, all_infractions, [m.model_dump() for m in ai_doc_result.extracted_metadata])
-                
-            prev_context = proj.get("consolidated_context", "")
-            prev_infractions = proj.get("consolidated_infractions", [])
-            prev_meta = proj.get("extracted_metadata", [])
+    if project_id and proj:
+        doc_rec = add_document_to_project(project_id, file.filename, document_type, file_path)
+        if doc_rec.get("id"):
+            add_document_analysis(doc_rec["id"], ai_doc_result.document_summary, all_infractions, [m.model_dump() for m in ai_doc_result.extracted_metadata])
             
-            # Consolidar con Gemini
-            eval_res = consolidate_accident_evaluation(
-                previous_context=prev_context,
-                new_doc_summary=ai_doc_result.document_summary,
-                new_doc_infractions=ai_doc_result.infractions,
-                new_doc_metadata=ai_doc_result.extracted_metadata
-            )
-            
-            update_project_evaluation(
-                project_id=project_id,
-                consolidated_context=eval_res.consolidated_context,
-                consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
-                success_probability=eval_res.success_probability,
-                extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
-            )
+        prev_context = proj.get("consolidated_context", "")
+        prev_infractions = proj.get("consolidated_infractions", [])
+        prev_meta = proj.get("extracted_metadata", [])
+        
+        # Consolidar con Gemini
+        eval_res = consolidate_accident_evaluation(
+            previous_context=prev_context,
+            new_doc_summary=ai_doc_result.document_summary,
+            new_doc_infractions=ai_doc_result.infractions,
+            new_doc_metadata=ai_doc_result.extracted_metadata,
+            project_data=proj
+        )
+        
+        update_project_evaluation(
+            project_id=project_id,
+            consolidated_context=eval_res.consolidated_context,
+            consolidated_infractions=[i.model_dump() for i in eval_res.consolidated_infractions],
+            success_probability=eval_res.success_probability,
+            extracted_metadata=[m.model_dump() for m in eval_res.extracted_metadata]
+        )
             
     return JSONResponse(content=res_data)
 

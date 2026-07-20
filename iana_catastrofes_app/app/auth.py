@@ -6,21 +6,21 @@ USERS_DB = {
         "username": "Jefatura",
         "password": "jefatura123@",
         "role": "read_only",
-        "name": "Jefatura Comunal / COGRID",
+        "name": "Jefatura",
         "title": "Director de Operaciones & Catastro"
     },
     "usuario 1": {
         "username": "usuario 1",
         "password": "usuario123@",
         "role": "operator",
-        "name": "Operador 1 de Terreno",
+        "name": "Operador 1",
         "title": "Cuadrilla de Respuesta Rápida"
     },
     "usuario 2": {
         "username": "usuario 2",
         "password": "usuario123@",
         "role": "operator",
-        "name": "Operador 2 de Terreno",
+        "name": "Operador 2",
         "title": "Cuadrilla de Respuesta Rápida"
     }
 }

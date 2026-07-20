@@ -375,7 +375,8 @@ def render_project_dashboard():
                             ai_res = analyze_single_document(
                                 file_content_text=extracted_text,
                                 document_type=doc_type,
-                                file_path=tmp_path
+                                file_path=tmp_path,
+                                project_data=project
                             )
 
                             doc_rec = add_document_to_project(proj_id, uploaded_file.name, doc_type, tmp_path)
@@ -396,7 +397,8 @@ def render_project_dashboard():
                                 initial_affectation_level=initial_affectation,
                                 initial_people_risk=initial_risk,
                                 previous_infractions=infractions,
-                                previous_metadata=metadata
+                                previous_metadata=metadata,
+                                project_data=project
                             )
 
                             update_project_evaluation(

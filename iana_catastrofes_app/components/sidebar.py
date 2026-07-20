@@ -22,12 +22,10 @@ def render_sidebar():
 
         # Perfil de usuario conectado
         if user:
-            role_badge = "[JEFATURA - SOLO LECTURA]" if read_only else "[OPERADOR - EDICIÓN]"
             st.markdown(f"""
                 <div style="background-color: var(--card-bg); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 1rem;">
                     <div style="font-weight: bold; color: var(--blue-title); font-size: 0.95rem;">{user.get('name')}</div>
                     <small style="color: var(--text-secondary);">{user.get('title')}</small><br/>
-                    <span style="font-size: 0.75rem; font-weight: bold; color: #0284c7;">{role_badge}</span>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -40,8 +38,8 @@ def render_sidebar():
         if not read_only:
             if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
                 st.session_state["show_new_project_dialog"] = True
+                st.markdown("---")
 
-        st.markdown("---")
         
         # Botón para volver al Inicio / Mapa General
         if st.button("Inicio / Mapa General", use_container_width=True, key="btn_go_home"):

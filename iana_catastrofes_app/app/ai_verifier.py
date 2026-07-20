@@ -38,16 +38,44 @@ def dump_obj(item: Any) -> Dict[str, Any]:
         return item.dict()
     return {"val": str(item)}
 
-def load_informe_alfa_context() -> str:
-    """Carga el Informe Alfa Municipal para incluirlo como contexto oficial."""
-    if os.path.exists(INFORME_ALFA_PATH):
-        try:
-            with open(INFORME_ALFA_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return json.dumps(data, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"Error al leer informe_alfa.json: {e}")
-    return "No hay Informe Alfa Municipal disponible."
+def build_project_context(project_data: Optional[Dict[str, Any]] = None) -> str:
+    """Construye el contexto operativo a partir de los datos propios de la emergencia."""
+    if not project_data:
+        return "No hay datos de la emergencia disponibles."
+    lines = []
+    if project_data.get("name"):
+        lines.append(f"Nombre: {project_data['name']}")
+    if project_data.get("sector"):
+        lines.append(f"Sector: {project_data['sector']}")
+    if project_data.get("commune"):
+        lines.append(f"Comuna: {project_data['commune']}")
+    if project_data.get("region"):
+        lines.append(f"Región: {project_data['region']}")
+    if project_data.get("project_category"):
+        lines.append(f"Categoría: {project_data['project_category']}")
+    et = project_data.get("emergency_types", [])
+    if et:
+        lines.append(f"Tipos de Emergencia: {', '.join(et) if isinstance(et, list) else et}")
+    if project_data.get("description"):
+        lines.append(f"Descripción: {project_data['description']}")
+    if project_data.get("affectation_level"):
+        lines.append(f"Nivel de Afectación Declarado: {project_data['affectation_level']}")
+    if project_data.get("people_risk"):
+        lines.append(f"Riesgo Personas Declarado: {project_data['people_risk']}")
+    aff = project_data.get("affectations", [])
+    if aff:
+        lines.append(f"Afectaciones: {', '.join(aff) if isinstance(aff, list) else aff}")
+    req = project_data.get("requirements_list", [])
+    if req:
+        lines.append(f"Requerimientos: {', '.join(req) if isinstance(req, list) else req}")
+    if project_data.get("attention_priority"):
+        lines.append(f"Prioridad de Atención: {project_data['attention_priority']}")
+    if project_data.get("observations"):
+        lines.append(f"Observaciones: {project_data['observations']}")
+    if project_data.get("follow_up"):
+        resp = project_data.get("follow_up_responsible", "")
+        lines.append(f"Seguimiento: Sí{' - ' + resp if resp else ''}")
+    return "\n".join(lines) if lines else "Sin datos de la emergencia."
 
 class MetadataItem(BaseModel):
     key: str = Field(description="Nombre del parámetro (ej: 'tipo_proyecto', 'sector', 'nivel_afectacion', 'vias_bloqueadas', 'danos_visibles', 'recursos_requeridos')")
@@ -141,21 +169,24 @@ def analyze_single_document(
     file_content_text: str,
     document_type: str,
     file_path: Optional[str] = None,
+    project_data: Optional[Dict[str, Any]] = None,
     model_name: str = DEFAULT_MODEL
 ) -> DocumentSpecificAnalysis:
-    """Analiza un documento de texto, Word o fotografía usando Gemini Multimodal + Instructor."""
+    """Analiza un documento de texto, Word o fotografía usando Gemini Multimodal + Instructor.
+    El contexto proviene exclusivamente de los datos de la emergencia registrada por el usuario."""
     if not client:
         raise RuntimeError("El cliente de Gemini no está configurado. Revisa GEMINI_API_KEY.")
 
-    alfa_context = load_informe_alfa_context()
+    # Contexto basado en los datos propios de la emergencia, NO en documentos externos
+    emergency_context = build_project_context(project_data)
 
     content_list = []
     prompt_text = f"""
     Eres un Evaluador Senior de Emergencias Municipales de la Región de Coquimbo, Chile.
     Analiza la evidencia ingresada (Tipo: {document_type}) bajo el contexto del temporal de lluvias y vientos en Coquimbo.
 
-    --- INFORME ALFA MUNICIPAL DE REFERENCIA ---
-    {alfa_context}
+    --- DATOS REGISTRADOS DE ESTA EMERGENCIA ---
+    {emergency_context}
 
     --- ANTECEDENTES EXTRAÍDOS DE LA EVIDENCIA ---
     {file_content_text}
@@ -166,6 +197,7 @@ def analyze_single_document(
     3. Clasifica el 'detected_people_risk' en: 'Sin riesgo', 'Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto' o 'Riesgo Inminente'.
     4. NO utilices porcentajes bajo ninguna circunstancia.
     5. Extrae las alertas y metadatos con la mayor precisión operativa posible.
+    6. Basa tu análisis EXCLUSIVAMENTE en los datos de esta emergencia y la evidencia adjunta. No asumas contexto externo.
     """
 
     content_list.append(prompt_text)
@@ -206,16 +238,19 @@ def consolidate_accident_evaluation(
     initial_people_risk: str = "Riesgo Medio",
     previous_infractions: List[Any] = [],
     previous_metadata: List[Any] = [],
+    project_data: Optional[Dict[str, Any]] = None,
     model_name: str = DEFAULT_MODEL
 ) -> ConsolidatedProjectEvaluation:
-    """Genera la evaluación consolidada asignando las oficinas exactas de intervención (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE)."""
+    """Genera la evaluación consolidada asignando las oficinas exactas de intervención.
+    El contexto proviene de los datos propios de la emergencia, NO de documentos externos."""
     if not client:
         raise RuntimeError("El cliente de Gemini no está configurado. Revisa GEMINI_API_KEY.")
 
-    alfa_context = load_informe_alfa_context()
+    # Contexto basado en los datos propios de la emergencia registrada por el usuario
+    emergency_context = build_project_context(project_data)
 
     prompt = f"""
-    Eres el Comandante Operativo de la Dirección de Gestión del Riesgo de Desastres de la Municipalidad de Coquimbo (COGRID Comunal).
+    Eres el Comandante Operativo de la Dirección de Gestión del Riesgo de Desastres de la Municipalidad de Coquimbo.
     Debes evaluar la emergencia y especificar exactamente CUÁLES DE LAS SIGUIENTES OFICINAS Y ESPECIALISTAS INTERVIENEN:
     - **Social**: Para damnificados, albergues, entregas de nylon/cajas de alimentos y contención social (DIDECO).
     - **Infraestructura**: Para reparación de obras municipales, contención de taludes, escombros y maquinaria pesada (Obras Municipales).
@@ -225,8 +260,8 @@ def consolidate_accident_evaluation(
     - **Ingeniero Eléctrico**: Para postes colapsados, tableros con cortocircuito, alumbrado público desenergizado y empalmes.
     - **CGE**: Para cortes masivos de luz de media/alta tensión, cables energizados en vía pública o transformadores caídos.
 
-    --- INFORME ALFA MUNICIPAL (RECURSOS Y PROTOCOLOS OFICIALES) ---
-    {alfa_context}
+    --- DATOS REGISTRADOS DE ESTA EMERGENCIA ---
+    {emergency_context}
 
     --- CLASIFICACIÓN INICIAL DECLARADA EN REGISTRO ---
     Nivel de Afectación Inicial: {initial_affectation_level}
@@ -244,12 +279,13 @@ def consolidate_accident_evaluation(
     Metadatos extraídos: {json.dumps([dump_obj(m) for m in new_doc_metadata], ensure_ascii=False)}
 
     INSTRUCCIONES CLAVE DE EVALUACIÓN:
-    1. Compara el Nivel de Afectación ({initial_affectation_level}) y Riesgo a Personas ({initial_people_risk}) iniciales con los datos REALES observados.
+    1. Compara el Nivel de Afectación ({initial_affectation_level}) y Riesgo a Personas ({initial_people_risk}) iniciales con los datos REALES observados en la evidencia.
     2. Determina el 'real_affectation_level' exacto: 'Baja', 'Media', 'Alta' o 'Crítica'.
     3. Determina el 'real_people_risk' exacto: 'Sin riesgo', 'Riesgo Bajo', 'Riesgo Medio', 'Riesgo Alto' o 'Riesgo Inminente'.
     4. Suministra un 'overall_alert_level' combinado (ej: 'CRÍTICA - RIESGO INMINENTE', 'ALTA - RIESGO ALTO', 'MEDIA - RIESGO MEDIO', 'BAJA - SIN RIESGO'). JAMÁS ENTREGUES PORCENTAJES.
     5. Detalla las 'mitigation_actions' y 'action_recommendations' operativas.
     6. Identifica e incluye obligatoriamente en 'recommended_entities' todas las oficinas requeridas según el tipo de daño y necesidades (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE, Aguas del Valle).
+    7. Basa tu análisis EXCLUSIVAMENTE en los datos registrados de esta emergencia y las evidencias adjuntas. No asumas contexto externo.
     """
 
     res = client.chat.completions.create(
