@@ -20,7 +20,6 @@ def render_sidebar():
         st.caption("Sistema de Registro y Gestión en Tiempo Real")
         st.divider()
 
-        # Perfil de usuario conectado
         if user:
             st.markdown(f"""
                 <div style="background-color: var(--card-bg); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 1rem;">
@@ -34,19 +33,16 @@ def render_sidebar():
 
             st.divider()
 
-        # Botón de Registrar Nueva Emergencia (oculto para Jefatura/Solo Lectura)
-        if not read_only:
-            if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
-                st.session_state["show_new_project_dialog"] = True
-                st.markdown("---")
-
-        
-        # Botón para volver al Inicio / Mapa General
         if st.button("Inicio / Mapa General", use_container_width=True, key="btn_go_home"):
             st.session_state["active_project"] = None
             st.session_state["show_new_project_dialog"] = False
             st.session_state["show_edit_project_dialog"] = False
             st.rerun()
+
+        if not read_only:
+            if st.button("+ Registrar Nueva Emergencia", use_container_width=True, type="primary", key="btn_new_project_trigger"):
+                st.session_state["show_new_project_dialog"] = True
+                st.markdown("---")
 
         st.markdown("### Emergencias Activas")
         
@@ -70,25 +66,6 @@ def render_sidebar():
                 btn_label = f"• {proj_name}" if not is_active else f"[Activa] {proj_name}"
                 
                 if st.button(btn_label, key=f"proj_btn_{proj_id}", use_container_width=True):
-                    st.session_state["active_project"] = proj
-                    st.session_state["show_new_project_dialog"] = False
-                    st.session_state["show_edit_project_dialog"] = False
-                    st.session_state["active_tab"] = "Centro de Mando"
-                    st.rerun()
-
-        st.markdown("---")
-        st.markdown("### Historial de Emergencias Resueltas")
-        if not resolved_projects:
-            st.caption("No hay emergencias en el historial resuelto.")
-        else:
-            for proj in resolved_projects:
-                proj_name = proj.get("name", "Sin Nombre")
-                proj_id = proj.get("id")
-                
-                is_active = (active_proj_id == proj_id)
-                btn_label = f"[Resuelta] {proj_name}" if not is_active else f"[Ver] {proj_name}"
-                
-                if st.button(btn_label, key=f"proj_btn_res_{proj_id}", use_container_width=True):
                     st.session_state["active_project"] = proj
                     st.session_state["show_new_project_dialog"] = False
                     st.session_state["show_edit_project_dialog"] = False
