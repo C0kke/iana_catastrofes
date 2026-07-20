@@ -42,9 +42,10 @@ except ModuleNotFoundError:
         )
 
 app = FastAPI(
-    title=f"Emergencias Coquimbo v{__version__}",
+    title=f"IANA - EMERGENCIA v{__version__}",
     description="API de Análisis en Tiempo Real para Emergencias"
 )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,9 +63,22 @@ RESULTS_DIR = os.path.join(DATA_DIR, "results")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
+try:
+    from chatbot_emergencia_app.app.weather_service import get_extended_weather_report
+except ModuleNotFoundError:
+    try:
+        from iana_catastrofes_app.app.weather_service import get_extended_weather_report
+    except ModuleNotFoundError:
+        from app.weather_service import get_extended_weather_report
+
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "version": __version__, "service": "Chatbot Emergencia API"}
+    return {"status": "ok", "version": __version__, "service": "IANA - EMERGENCIA API"}
+
+@app.get("/api/weather/{commune}")
+def get_commune_weather(commune: str):
+    """Obtiene el reporte meteorológico en vivo y pronóstico (-1d a +3d) para una comuna de Coquimbo."""
+    return get_extended_weather_report(commune)
 
 @app.post("/api/upload")
 async def upload_document(

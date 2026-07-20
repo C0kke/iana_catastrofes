@@ -19,6 +19,7 @@ try:
     from chatbot_emergencia_app.app.auth import is_read_only
     from chatbot_emergencia_app.components.map_component import render_location_picker_map
     from chatbot_emergencia_app.components.dialogs import render_edit_project_dialog
+    from chatbot_emergencia_app.components.weather_dashboard import render_compact_weather_widget
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.pdf_extract import extract_text_from_file
@@ -36,6 +37,7 @@ except ModuleNotFoundError:
         from iana_catastrofes_app.app.auth import is_read_only
         from iana_catastrofes_app.components.map_component import render_location_picker_map
         from iana_catastrofes_app.components.dialogs import render_edit_project_dialog
+        from iana_catastrofes_app.components.weather_dashboard import render_compact_weather_widget
     except ModuleNotFoundError:
         from app.pdf_extract import extract_text_from_file
         from app.rules_engine import evaluate_emergency_rules
@@ -52,6 +54,7 @@ except ModuleNotFoundError:
         from app.auth import is_read_only
         from components.map_component import render_location_picker_map
         from components.dialogs import render_edit_project_dialog
+        from components.weather_dashboard import render_compact_weather_widget
 
 DOC_TYPES_MAP = {
     "site_photo": "Evidencia Fotográfica / Terreno",
@@ -96,7 +99,7 @@ def render_project_dashboard():
     status = project.get("status", "activa")
 
     region = project.get("region", "Coquimbo")
-    commune = project.get("commune", "La Serena")
+    commune = project.get("commune", "Coquimbo")
     lat_val = project.get("latitude")
     lng_val = project.get("longitude")
 
@@ -140,6 +143,8 @@ def render_project_dashboard():
                 </p>
             </div>
         """, unsafe_allow_html=True)
+
+    render_compact_weather_widget(commune)
 
     with col_h2:
         if st.button("Ejecutar / Reevaluar Análisis con IA", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):

@@ -47,8 +47,9 @@ def create_project(
     follow_up: bool = False,
     follow_up_responsible: str = "",
     region: str = "Coquimbo",
-    commune: str = "La Serena",
+    commune: str = "Coquimbo",
     latitude: Optional[float] = None,
+
     longitude: Optional[float] = None,
     status: str = "activa"
 ) -> Dict[str, Any]:

@@ -6,17 +6,20 @@ try:
     from chatbot_emergencia_app.app.auth import get_current_user, is_read_only
     from chatbot_emergencia_app.components.map_component import render_emergencies_overview_map
     from chatbot_emergencia_app.components.commune_dashboard import render_commune_impact_dashboard
+    from chatbot_emergencia_app.components.weather_dashboard import render_weather_monitoring_tab
 except ModuleNotFoundError:
     try:
         from iana_catastrofes_app.app.db import get_chile_now_iso, list_projects
         from iana_catastrofes_app.app.auth import get_current_user, is_read_only
         from iana_catastrofes_app.components.map_component import render_emergencies_overview_map
         from iana_catastrofes_app.components.commune_dashboard import render_commune_impact_dashboard
+        from iana_catastrofes_app.components.weather_dashboard import render_weather_monitoring_tab
     except ModuleNotFoundError:
         from app.db import get_chile_now_iso, list_projects
         from app.auth import get_current_user, is_read_only
         from components.map_component import render_emergencies_overview_map
         from components.commune_dashboard import render_commune_impact_dashboard
+        from components.weather_dashboard import render_weather_monitoring_tab
 
 def render_welcome_page():
     user = get_current_user()
@@ -33,12 +36,13 @@ def render_welcome_page():
 
     st.markdown("""
         <div style="background-color: var(--card-bg); border-radius: 12px; padding: 1.8rem; border: 1px solid var(--card-border); margin-bottom: 1.2rem;">
-            <h1 style="color: var(--blue-title); margin-top: 0; font-size: 2.2rem; font-weight: 800;">Emergencias Coquimbo</h1>
+            <h1 style="color: var(--blue-title); margin-top: 0; font-size: 2.2rem; font-weight: 800;">IANA - EMERGENCIA</h1>
             <p style="color: var(--text-primary); font-size: 1.05rem; line-height: 1.5; margin-bottom: 0;">
                 Herramienta de análisis, criterios y toma de decisiones para la coordinación de cuadrillas y respuesta rápida en la <strong>Región de Coquimbo</strong> ante anegamientos, temporales y aislamiento municipal.
             </p>
         </div>
     """, unsafe_allow_html=True)
+
 
     col_t1, col_t2 = st.columns([1, 1])
     with col_t1:
@@ -56,7 +60,6 @@ def render_welcome_page():
 
     st.markdown("<br/>", unsafe_allow_html=True)
 
-    # Métricas de Catastro Ejecutivo para Jefatura y Operadores
     all_projects = list_projects()
     active_list = [p for p in all_projects if p.get("status", "activa") == "activa"]
     resolved_list = [p for p in all_projects if p.get("status", "activa") in ["tratada", "solucionada"]]
@@ -75,14 +78,16 @@ def render_welcome_page():
     st.markdown("<br/>", unsafe_allow_html=True)
 
     if read_only:
-        tab_mapa, tab_historial, tab_dashboard = st.tabs([
+        tab_mapa, tab_clima, tab_historial, tab_dashboard = st.tabs([
             "Mapa de Monitoreo Georreferenciado",
+            "Monitoreo Climático Regional",
             "Historial de Emergencias Tratadas / Solucionadas",
             "Dashboard de Impacto Comunal (Jefatura)"
         ])
     else:
-        tab_mapa, tab_historial = st.tabs([
+        tab_mapa, tab_clima, tab_historial = st.tabs([
             "Mapa de Monitoreo Georreferenciado",
+            "Monitoreo Climático Regional",
             "Historial de Emergencias Tratadas / Solucionadas"
         ])
         tab_dashboard = None
@@ -92,6 +97,9 @@ def render_welcome_page():
         st.caption("Usa el mapa libremente para desplazar, hacer zoom y revisar la distribución geográfica de los eventos.")
         render_emergencies_overview_map(all_projects, height=480)
 
+    with tab_clima:
+        render_weather_monitoring_tab()
+        
     with tab_historial:
         st.markdown("### Historial de Emergencias Resueltas / Tratadas")
         if not resolved_list:

@@ -1,4 +1,4 @@
-# Chatbot Emergencia
+# IANA - EMERGENCIA
 
 Sistema inteligente de gestión, análisis en tiempo real y soporte para la toma de decisiones ante desastres climáticos y eventos de emergencia a nivel municipal en la **Región de Coquimbo, Chile**.
 
@@ -8,7 +8,7 @@ Sistema inteligente de gestión, análisis en tiempo real y soporte para la toma
 
 Ante frentes de mal tiempo de gran magnitud, temporales, anegamientos masivos, socavones, desbordes, desprendimientos en rutas interurbanas y aislamiento de comunidades, los equipos municipales de gestión del riesgo necesitan procesar volúmenes elevados de solicitudes y evidencia de campo para **priorizar recursos y asignar cuadrillas de respuesta rápida**.
 
-**Chatbot Emergencia** actúa como un Centro de Mando Digital que:
+**IANA - EMERGENCIA** actúa como un Centro de Mando Digital que:
 - **Centraliza las solicitudes de emergencia municipal:** Registra dirección, sector, tipo de evento (inundación, socavón, caída de postes/árboles, daño estructural, aislamiento), nivel de afectación y riesgo directo para las personas.
 - **Procesa evidencia multimodal de terreno:** Analiza fotografías tomadas en el lugar, informes técnicos en Word (.docx) y partes/fichas en PDF utilizando Inteligencia Artificial (**Gemini Multimodal Vision**).
 - **Establece criterios y entregables operativos:** Evalúa automáticamente el grado de mitigación de la escena (0-100%), identifica riesgos desbordados e integra recomendaciones operativas claras para coordinar cuadrillas de maquinaria pesada (retroexcavadoras, camiones aljibe, tolva) y equipos de emergencia en terreno.

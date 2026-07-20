@@ -15,9 +15,10 @@ except ModuleNotFoundError:
         from components.map_component import render_location_picker_map
 
 COMMUNES_COQUIMBO = [
-    "La Serena",
     "Coquimbo",
+    "La Serena",
     "Ovalle",
+
     "Vicuña",
     "Illapel",
     "Los Vilos",

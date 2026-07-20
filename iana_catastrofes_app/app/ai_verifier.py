@@ -27,6 +27,14 @@ except Exception as e:
     client = None
     print(f"Error inicializando el cliente de IA: {e}")
 
+try:
+    from chatbot_emergencia_app.app.weather_service import get_extended_weather_report
+except ModuleNotFoundError:
+    try:
+        from iana_catastrofes_app.app.weather_service import get_extended_weather_report
+    except ModuleNotFoundError:
+        from app.weather_service import get_extended_weather_report
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INFORME_ALFA_PATH = os.path.join(BASE_DIR, "knowledge", "informe_alfa.json")
 
@@ -41,7 +49,7 @@ def dump_obj(item: Any) -> Dict[str, Any]:
     return {"val": str(item)}
 
 def build_project_context(project_data: Optional[Dict[str, Any]] = None) -> str:
-    """Construye el contexto operativo a partir de los datos propios de la emergencia."""
+    """Construye el contexto operativo a partir de los datos propios de la emergencia y el estado meteorológico (-1d a +3d)."""
     if not project_data:
         return "No hay datos de la emergencia disponibles."
     lines = []
@@ -49,8 +57,8 @@ def build_project_context(project_data: Optional[Dict[str, Any]] = None) -> str:
         lines.append(f"Nombre: {project_data['name']}")
     if project_data.get("sector"):
         lines.append(f"Sector: {project_data['sector']}")
-    if project_data.get("commune"):
-        lines.append(f"Comuna: {project_data['commune']}")
+    commune = project_data.get("commune", "Coquimbo")
+    lines.append(f"Comuna: {commune}")
     if project_data.get("region"):
         lines.append(f"Región: {project_data['region']}")
     if project_data.get("project_category"):
@@ -77,6 +85,35 @@ def build_project_context(project_data: Optional[Dict[str, Any]] = None) -> str:
     if project_data.get("follow_up"):
         resp = project_data.get("follow_up_responsible", "")
         lines.append(f"Seguimiento: Sí{' - ' + resp if resp else ''}")
+
+    try:
+        w = get_extended_weather_report(commune)
+        cur = w.get("current", {})
+        s4 = w.get("summary_4days", {})
+        alerts = w.get("alerts", [])
+        isotherm = w.get("isotherm_0_m", 2100)
+
+        weather_lines = [
+            f"Comuna: {commune}",
+            f"Estado Actual: Temp {cur.get('temp_c')}°C, {cur.get('condition')}, Lluvia última hora: {cur.get('rain_last_hour_mm')} mm/h, Viento: {cur.get('wind_kmh')} km/h",
+            f"Isoterma 0°C: {isotherm} m.s.n.m.",
+            f"Precipitación Pasada (-24h Ayer): {s4.get('day_minus_1_rain_mm')} mm acumulados",
+            f"Precipitación Proyectada Hoy (24h): {s4.get('day_0_today_rain_mm')} mm",
+            f"Precipitación Proyectada +1 Día: {s4.get('day_plus_1_rain_mm')} mm",
+            f"Precipitación Proyectada +2 Días: {s4.get('day_plus_2_rain_mm')} mm",
+            f"Total Lluvia Proyectada 4 Días: {s4.get('total_4day_rain_mm')} mm"
+        ]
+        if alerts:
+            alert_descs = [f"[{a.get('source')} - {a.get('severity')}] {a.get('event')}: {a.get('description')}" for a in alerts]
+            weather_lines.append("ALERTAS OFICIALES DMC/ONEMI VIGENTES:")
+            weather_lines.extend(alert_descs)
+        else:
+            weather_lines.append("Sin alertas oficiales DMC activas actualmente.")
+
+        lines.extend(weather_lines)
+    except Exception as e:
+        lines.append(f"\n[Warning Clima]: No se pudo inyectar clima en tiempo real: {e}")
+
     return "\n".join(lines) if lines else "Sin datos de la emergencia."
 
 class MetadataItem(BaseModel):
@@ -138,6 +175,12 @@ class ConsolidatedProjectEvaluation(BaseModel):
     consolidated_context: str = Field(
         description="Resumen cronológico acumulado de la emergencia en la Región de Coquimbo. Unifica los datos iniciales con la nueva evidencia."
     )
+    weather_context_summary: str = Field(
+        description="Resumen del escenario climático actual y proyectado a 3 días (OpenWeather/DMC) en la comuna afectada (lluvia acumulada, isoterma 0°C y alertas)."
+    )
+    weather_risk_impact: str = Field(
+        description="Evaluación de cómo la precipitación proyectada a 72h y la cota de la isoterma agravarán el riesgo de saturación, desbordes o aluviones."
+    )
     initial_vs_real_risk_evaluation: str = Field(
         description="Evaluación comparativa: Contrasta el Nivel de Afectación y Riesgo a Personas declarados inicialmente con los valores REALES observados en terreno."
     )
@@ -151,14 +194,15 @@ class ConsolidatedProjectEvaluation(BaseModel):
         description="Determinación global de alerta combinando Afectación y Riesgo a Personas (ej: 'CRÍTICA - RIESGO INMINENTE', 'ALTA - RIESGO ALTO', 'MEDIA - RIESGO MEDIO', 'BAJA - SIN RIESGO'). JAMÁS ENTREGUES PORCENTAJES."
     )
     mitigation_actions: List[str] = Field(
-        description="Lista de acciones de mitigación concretas requeridas para contener la contingencia."
+        description="Lista de acciones de mitigación concretas requeridas para contener la contingencia considerando la tendencia meteorológica."
     )
     action_recommendations: List[str] = Field(
-        description="Recomendaciones operativas paso a paso para desplegar las cuadrillas municipales."
+        description="Recomendaciones operativas paso a paso para desplegar las cuadrillas municipales (evacuaciones preventivas, motobombas, maquinaria pesada)."
     )
     recommended_entities: List[EntityRecommendation] = Field(
-        description="Lista de oficinas y profesionales especializados que deben intervenir (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE, Aguas del Valle)."
+        description="Lista de oficinas y profesionales especializados que deben intervenir (Social, Infraestructura, Ingeniería, Arquitectura, Especialista Hídrico, Ingeniero Eléctrico, CGE, Aguas del Valle, SENAPRED)."
     )
+
     consolidated_infractions: List[Infraction] = Field(
         description="Lista acumulada de alertas de riesgo activas."
     )

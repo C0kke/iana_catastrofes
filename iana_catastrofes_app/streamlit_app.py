@@ -40,7 +40,7 @@ except ModuleNotFoundError:
 INDEX_CSS_PATH = os.path.join(BASE_DIR, "index.css")
 
 st.set_page_config(
-    page_title=f"Emergencias Coquimbo",
+    page_title=f"IANA - EMERGENCIA",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -63,7 +63,6 @@ st.session_state.setdefault("show_new_project_dialog", False)
 st.session_state.setdefault("show_edit_project_dialog", False)
 st.session_state.setdefault("active_shift", "1")
 
-# Interceptación de parámetros de mapa preservando la sesión del usuario
 param_proj_id = st.query_params.get("selected_proj_id")
 if param_proj_id:
     proj_obj = get_project_by_id(param_proj_id)
@@ -78,7 +77,6 @@ if param_proj_id:
                 pass
         st.rerun()
 
-# Interceptar pantalla de inicio de sesión si no hay sesión activa o guardada
 current_user = get_current_user()
 if not current_user:
     render_login_screen()
@@ -86,7 +84,6 @@ if not current_user:
 
 render_sidebar()
 
-# Renderizar modal de creación si show_new_project_dialog es True
 if st.session_state.get("show_new_project_dialog"):
     render_new_project_dialog()
     
