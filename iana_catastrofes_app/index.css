@@ -47,6 +47,72 @@ div[role="dialog"] {
     border-radius: 10px;
 }
 
+div[data-testid="stHeader"],
+header[data-testid="stHeader"],
+.stAppHeader {
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+/* BOTÓN DE DESPLEGAR/COLAPSAR SIDEBAR: VISIBLE Y INTERACTIVO */
+div[data-testid="stSidebarHeader"],
+div[data-testid="stCollapsedControl"],
+button[data-testid="stSidebarCollapseButton"],
+button[aria-label*="sidebar"],
+button[aria-label*="Sidebar"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+}
+
+/* OCULTAR ÚNICAMENTE LA TOOLBAR DERECHA (Share, Star, Edit, Github, Kebab) Y FOOTER / BADGES */
+div[data-testid="stToolbar"],
+div[data-testid="stToolbarActions"],
+div[data-testid="stToolbarActionButton"],
+div[class*="stToolbarActions"],
+.stAppToolbar,
+.stToolbar,
+.stMainMenu,
+.stToolbarActions,
+.stAppViewerBadge,
+.stViewerBadge,
+.stDeployButton,
+.stAppDeployButton,
+div[data-testid="stAppToolbar"],
+div[data-testid="stMainMenu"],
+div[data-testid="stMainMenuButton"],
+div[data-testid="stAppViewerBadge"],
+div[data-testid="stAppDeployButton"],
+div[data-testid="stDeployButton"],
+div[data-testid="stStatusWidget"],
+div[data-testid="stDecoration"],
+div[class*="stAppViewerBadge"],
+div[class*="stViewerBadge"],
+div[class*="stAppDeployButton"],
+div[class*="stDeployButton"],
+div[class*="viewerBadge"],
+div[class*="ViewerBadge"],
+#MainMenu,
+footer,
+button[title*="Manage app"],
+button[data-testid="stMainMenuButton"],
+a[href*="streamlit.io"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0px !important;
+    width: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+
 
 input,
 select,
