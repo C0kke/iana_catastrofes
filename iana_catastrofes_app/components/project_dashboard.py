@@ -147,7 +147,7 @@ def render_project_dashboard():
     render_compact_weather_widget(commune)
 
     with col_h2:
-        if st.button("Ejecutar / Reevaluar Análisis con IA", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
+        if st.button("Ejecutar / Reevaluar Análisis", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
             with st.spinner("Ejecutando evaluación..."):
                 try:
                     docs = list_project_documents(proj_id)

@@ -123,7 +123,7 @@ def render_welcome_page():
 
     if tab_dashboard:
         with tab_dashboard:
-            render_commune_impact_dashboard(all_projects)
+            render_commune_impact_dashboard(all_projects, critical_points=all_cp)
 
     st.markdown("<br/>", unsafe_allow_html=True)
     st.info("Selecciona una emergencia en el panel lateral para revisar su información detallada.")

@@ -25,7 +25,7 @@ try:
     client = instructor.from_genai(genai_client, mode=instructor.Mode.GENAI_STRUCTURED_OUTPUTS)
 except Exception as e:
     client = None
-    print(f"Error inicializando el cliente de IA: {e}")
+    print(f"Error inicializando el modelo: {e}")
 
 try:
     from chatbot_emergencia_app.app.weather_service import get_extended_weather_report
@@ -221,9 +221,8 @@ def analyze_single_document(
     """Analiza un documento de texto, Word o fotografía a través de la IA.
     El contexto proviene exclusivamente de los datos de la emergencia registrada por el usuario."""
     if not client:
-        raise RuntimeError("El cliente de IA no está configurado. Revisa la clave")
+        raise RuntimeError("El cliente de análisis no está configurado. Revisa la clave")
 
-    # Contexto basado en los datos propios de la emergencia, NO en documentos externos
     emergency_context = build_project_context(project_data)
 
     content_list = []
@@ -290,7 +289,7 @@ def consolidate_accident_evaluation(
     """Genera la evaluación consolidada asignando las oficinas exactas de intervención.
     El contexto proviene de los datos propios de la emergencia, NO de documentos externos."""
     if not client:
-        raise RuntimeError("El cliente de IA no está configurado. Revisa la clave")
+        raise RuntimeError("El cliente de análisis no está configurado. Revisa la clave")
 
     emergency_context = build_project_context(project_data)
 

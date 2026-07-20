@@ -40,13 +40,57 @@ section[data-testid="stSidebar"] {
 
 div[data-testid="stForm"],
 div[data-testid="stExpander"],
-div[data-testid="stHeader"],
 div[role="dialog"] {
     background-color: var(--card-bg) !important;
     border: 1px solid var(--card-border) !important;
     color: var(--text-primary) !important;
     border-radius: 10px;
 }
+
+.stAppHeader,
+.stAppToolbar,
+.stToolbar,
+.stMainMenu,
+.stToolbarActions,
+.stToolbarActionButton,
+.stAppViewerBadge,
+.stViewerBadge,
+.stDeployButton,
+.stAppDeployButton,
+div[data-testid="stAppHeader"],
+div[data-testid="stAppToolbar"],
+div[data-testid="stHeader"],
+div[data-testid="stToolbar"],
+div[data-testid="stToolbarActions"],
+div[data-testid="stToolbarActionButton"],
+div[data-testid="stMainMenu"],
+div[data-testid="stMainMenuButton"],
+div[data-testid="stAppViewerBadge"],
+div[data-testid="stAppDeployButton"],
+div[data-testid="stDeployButton"],
+div[data-testid="stStatusWidget"],
+div[data-testid="stDecoration"],
+div[class*="stAppViewerBadge"],
+div[class*="stViewerBadge"],
+div[class*="stAppDeployButton"],
+div[class*="stDeployButton"],
+div[class*="viewerBadge"],
+div[class*="ViewerBadge"],
+#MainMenu,
+header,
+footer,
+button[title*="Manage app"],
+button[data-testid="stMainMenuButton"],
+a[href*="streamlit.io"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0px !important;
+    width: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
 
 input,
 select,
@@ -187,21 +231,4 @@ div {
 
 .stProgress>div>div>div>div {
     background-image: linear-gradient(to right, #0284c7, #2563eb, #16a34a) !important;
-}
-
-#MainMenu,
-header[data-testid="stHeader"],
-div[data-testid="stHeader"],
-div[data-testid="stToolbar"],
-div[class*="stAppToolbar"],
-div[data-testid="stDecoration"],
-footer,
-div[class*="stAppDeployButton"],
-div[data-testid="stAppDeployButton"],
-div[data-testid="stStatusWidget"],
-button[title*="Manage app"],
-.stDeployButton {
-    visibility: hidden !important;
-    display: none !important;
-    height: 0px !important;
 }
