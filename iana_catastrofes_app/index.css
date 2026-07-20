@@ -188,3 +188,20 @@ div {
 .stProgress>div>div>div>div {
     background-image: linear-gradient(to right, #0284c7, #2563eb, #16a34a) !important;
 }
+
+#MainMenu,
+header[data-testid="stHeader"],
+div[data-testid="stHeader"],
+div[data-testid="stToolbar"],
+div[class*="stAppToolbar"],
+div[data-testid="stDecoration"],
+footer,
+div[class*="stAppDeployButton"],
+div[data-testid="stAppDeployButton"],
+div[data-testid="stStatusWidget"],
+button[title*="Manage app"],
+.stDeployButton {
+    visibility: hidden !important;
+    display: none !important;
+    height: 0px !important;
+}
