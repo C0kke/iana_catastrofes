@@ -38,7 +38,8 @@ PROJECT_CATEGORY_OPTIONS = [
     "Caminos y Carreteras",
     "Infraestructura Pública",
     "Puentes",
-    "Infraestructura Privada"
+    "Infraestructura Privada",
+    "Emergencia riesgo social"
 ]
 
 TIPOS_EMERGENCIA_OPCIONES = [
@@ -222,7 +223,8 @@ def render_new_project_dialog():
 
     if st.button("Guardar e Inicializar Emergencia", type="primary", use_container_width=True, disabled=not can_submit):
         try:
-            main_type = selected_emergency_types[0].lower().replace(" ", "_") if selected_emergency_types else "other"
+            # project_type usa 'other' como valor seguro; los tipos detallados están en emergency_types (JSONB)
+            main_type = "other"
             
             new_p = create_project(
                 name=name.strip(),
