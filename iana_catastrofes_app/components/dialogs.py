@@ -206,46 +206,64 @@ def render_new_project_dialog():
     with col_f2:
         follow_up_responsible = st.text_input("RESPONSABLE DE SEGUIMIENTO", placeholder="Nombre o unidad responsable")
 
+    missing_fields = []
+    if not name or not name.strip():
+        missing_fields.append("Nombre / Código de la Emergencia")
+    if not sector or not sector.strip():
+        missing_fields.append("Sector")
+    if not selected_emergency_types:
+        missing_fields.append("Tipo de Emergencia (selecciona al menos uno)")
+
+    can_submit = len(missing_fields) == 0
+
     st.markdown("---")
-    if st.button("Guardar e Inicializar Emergencia", type="primary", use_container_width=True):
-        if not name or not sector:
-            st.error("El nombre y el sector son obligatorios.")
-        else:
-            try:
-                main_type = selected_emergency_types[0].lower().replace(" ", "_") if selected_emergency_types else "other"
-                
-                new_p = create_project(
-                    name=name,
-                    shift_number=shift_number,
-                    chile_time=chile_now_str,
-                    address=sector,
-                    sector=sector,
-                    project_category=project_category,
-                    project_type=main_type,
-                    emergency_types=selected_emergency_types,
-                    description=description,
-                    affectation_level=affectation_level,
-                    people_risk=people_risk,
-                    affectations=selected_affectations,
-                    requirements_list=selected_requirements,
-                    attention_priority=attention_priority,
-                    observations=observations,
-                    follow_up=follow_up_bool,
-                    follow_up_responsible=follow_up_responsible,
-                    region=selected_region,
-                    commune=selected_commune,
-                    latitude=final_lat,
-                    longitude=final_lng,
-                    status="activa"
-                )
-                st.success("¡Emergencia registrada exitosamente!")
-                st.session_state["show_new_project_dialog"] = False
-                st.session_state["active_project"] = new_p
-                st.session_state.pop("dlg_lat", None)
-                st.session_state.pop("dlg_lng", None)
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error al registrar la emergencia: {e}")
+    if missing_fields:
+        st.warning(f"Campos obligatorios faltantes: **{', '.join(missing_fields)}**")
+
+    if st.button("Guardar e Inicializar Emergencia", type="primary", use_container_width=True, disabled=not can_submit):
+        try:
+            main_type = selected_emergency_types[0].lower().replace(" ", "_") if selected_emergency_types else "other"
+            
+            new_p = create_project(
+                name=name.strip(),
+                shift_number=shift_number,
+                chile_time=chile_now_str,
+                address=sector.strip(),
+                sector=sector.strip(),
+                project_category=project_category,
+                project_type=main_type,
+                emergency_types=selected_emergency_types,
+                description=description.strip(),
+                affectation_level=affectation_level,
+                people_risk=people_risk,
+                affectations=selected_affectations,
+                requirements_list=selected_requirements,
+                attention_priority=attention_priority,
+                observations=observations,
+                follow_up=follow_up_bool,
+                follow_up_responsible=follow_up_responsible,
+                region=selected_region,
+                commune=selected_commune,
+                latitude=final_lat,
+                longitude=final_lng,
+                status="activa"
+            )
+
+            saved_id = new_p.get("id", "")
+            if not saved_id or str(saved_id).startswith("local-"):
+                st.error("Error al guardar emergencia. Intenta nuevamente.")
+                return
+
+            st.success(f"¡Emergencia '{name}' registrada exitosamente! (ID: {saved_id})")
+            st.session_state["show_new_project_dialog"] = False
+            st.session_state["active_project"] = new_p
+            st.session_state.pop("dlg_lat", None)
+            st.session_state.pop("dlg_lng", None)
+            import time
+            time.sleep(1)
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error al registrar la emergencia: {e}")
 
 @st.dialog("Editar Datos de la Emergencia")
 def render_edit_project_dialog(project: dict):

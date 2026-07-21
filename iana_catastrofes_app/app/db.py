@@ -93,18 +93,16 @@ def create_project(
     }
     
     if not supabase_client:
-        data["id"] = f"local-{int(datetime.now().timestamp())}"
-        data["created_at"] = chile_time
-        return data
+        raise ConnectionError("No hay conexión a la base de datos")
 
     try:
         res = supabase_client.table("projects").insert(data).execute()
-        return res.data[0] if res.data else data
+        if res.data:
+            return res.data[0]
+        else:
+            raise RuntimeError("la base de datos no retornó datos")
     except Exception as e:
-        print(f"Advertencia al guardar en Supabase (usando respaldo local): {e}")
-        data["id"] = f"local-{int(datetime.now().timestamp())}"
-        data["created_at"] = chile_time
-        return data
+        raise RuntimeError(f"Error al guardar la emergencia en la base de datos: {e}")
 
 def update_project_details(
     project_id: str,
