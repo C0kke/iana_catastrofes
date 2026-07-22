@@ -248,3 +248,10 @@ div {
 .stProgress>div>div>div>div {
     background-image: linear-gradient(to right, #0284c7, #2563eb, #16a34a) !important;
 }
+
+div[role="dialog"]:has(.iana-modal-wrapper),
+section[role="dialog"]:has(.iana-modal-wrapper) {
+    width: 60vw !important;
+    max-width: 85vw !important;
+    min-width: 500px !important;
+}
