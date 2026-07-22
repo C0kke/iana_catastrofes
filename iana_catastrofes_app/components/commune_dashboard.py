@@ -316,7 +316,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#0f172a")
         )
-        st.plotly_chart(fig_pie1, use_container_width=True)
+        st.plotly_chart(fig_pie1, width="stretch")
 
     with g2:
         affectation_counts = {}
@@ -348,7 +348,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#0f172a")
             )
-            st.plotly_chart(fig_pie2, use_container_width=True)
+            st.plotly_chart(fig_pie2, width="stretch")
         else:
             st.info("Sin registros de servicios afectados.")
 
@@ -384,7 +384,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#0f172a")
         )
-        st.plotly_chart(fig_pie3, use_container_width=True)
+        st.plotly_chart(fig_pie3, width="stretch")
 
     st.markdown("---")
 
@@ -417,7 +417,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#0f172a")
         )
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width="stretch")
 
     with b2:
         st.markdown("**Demandas de Recurso Técnico y Maquinaria Pesada**")
@@ -449,7 +449,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 plot_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="#0f172a")
             )
-            st.plotly_chart(fig_req, use_container_width=True)
+            st.plotly_chart(fig_req, width="stretch")
         else:
             st.info("Sin solicitudes de maquinaria registradas.")
 
@@ -503,7 +503,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             file_name=custom_filename,
             mime="application/pdf",
             type="primary",
-            use_container_width=True
+            width="stretch"
         )
 
     st.markdown("---")

@@ -191,7 +191,7 @@ def render_weather_monitoring_tab(default_commune: str = "Coquimbo"):
         fig.update_yaxes(title_text="Viento (km/h) / Temp (°C)", secondary_y=True, showgrid=False)
 
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 def render_compact_weather_widget(commune_name: str):
     """Renderiza un widget compacto para ser integrado dentro del tablero de una emergencia específica."""

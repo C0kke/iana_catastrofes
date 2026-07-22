@@ -88,7 +88,10 @@ REQUERIMIENTO_OPCIONES = [
     "Señalizacion"
 ]
 
-@st.dialog("Registrar Nueva Emergencia", width="large")
+def _close_new_project_dialog():
+    st.session_state["show_new_project_dialog"] = False
+
+@st.dialog("Registrar Nueva Emergencia", width="large", on_dismiss=_close_new_project_dialog)
 def render_new_project_dialog():
     st.markdown('<div class="iana-modal-wrapper"></div>', unsafe_allow_html=True)
     st.write("Completa la información oficial para registrar el evento de emergencia en tiempo real.")
@@ -222,7 +225,7 @@ def render_new_project_dialog():
     if missing_fields:
         st.warning(f"Campos obligatorios faltantes: **{', '.join(missing_fields)}**")
 
-    if st.button("Guardar e Inicializar Emergencia", type="primary", use_container_width=True, disabled=not can_submit):
+    if st.button("Guardar e Inicializar Emergencia", type="primary", width="stretch", disabled=not can_submit):
         try:
             # project_type usa 'other' como valor seguro; los tipos detallados están en emergency_types (JSONB)
             main_type = "other"
@@ -268,7 +271,10 @@ def render_new_project_dialog():
         except Exception as e:
             st.error(f"Error al registrar la emergencia: {e}")
 
-@st.dialog("Editar Datos de la Emergencia", width="large")
+def _close_edit_project_dialog():
+    st.session_state["show_edit_project_dialog"] = False
+
+@st.dialog("Editar Datos de la Emergencia", width="large", on_dismiss=_close_edit_project_dialog)
 def render_edit_project_dialog(project: dict):
     st.markdown('<div class="iana-modal-wrapper"></div>', unsafe_allow_html=True)
     st.write("Modifica o actualiza la información técnica de la emergencia.")
@@ -344,7 +350,7 @@ def render_edit_project_dialog(project: dict):
     observations = st.text_area("OBSERVACIONES", value=project.get("observations", ""))
 
     st.markdown("---")
-    if st.button("Guardar Cambios de la Emergencia", type="primary", use_container_width=True):
+    if st.button("Guardar Cambios de la Emergencia", type="primary", width="stretch"):
         if not name or not sector:
             st.error("El nombre y el sector son obligatorios.")
         else:
@@ -397,7 +403,10 @@ TYPE_LABELS = {
     "otro": "Otro"
 }
 
-@st.dialog("Puntos Críticos / Rutas Cortadas", width="large")
+def _close_critical_point_dialog():
+    st.session_state["show_new_critical_point_dialog"] = False
+
+@st.dialog("Puntos Críticos / Rutas Cortadas", width="large", on_dismiss=_close_critical_point_dialog)
 def render_new_critical_point_dialog():
     """Modal con tabs para crear y gestionar Puntos Críticos."""
     st.markdown('<div class="iana-modal-wrapper"></div>', unsafe_allow_html=True)
@@ -465,7 +474,7 @@ def render_new_critical_point_dialog():
         if missing:
             st.warning(f"Campos obligatorios faltantes: **{', '.join(missing)}**")
 
-        if st.button("Guardar Punto Crítico", type="primary", use_container_width=True, key="save_cp_btn", disabled=not can_save):
+        if st.button("Guardar Punto Crítico", type="primary", width="stretch", key="save_cp_btn", disabled=not can_save):
             try:
                 cp = create_critical_point(
                     name=name.strip(),
@@ -579,7 +588,7 @@ def render_edit_critical_point_dialog(cp: dict):
     st.markdown("---")
     col_b1, col_b2 = st.columns(2)
     with col_b1:
-        if st.button("Guardar Cambios del Punto Crítico", type="primary", use_container_width=True):
+        if st.button("Guardar Cambios del Punto Crítico", type="primary", width="stretch"):
             try:
                 update_critical_point(
                     point_id=cp_id,

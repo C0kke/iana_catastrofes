@@ -53,8 +53,10 @@ def render_emergencies_overview_map(
 ):
     """Renderiza el mapa de monitoreo general con emergencias y marcadores 'X' de Puntos Críticos / Rutas Cortadas."""
     
-    # Garantiza que la interacción con el mapa no active el modal de creación de emergencias.
+    # Garantiza que la interacción con el mapa no active modales.
     st.session_state["show_new_project_dialog"] = False
+    st.session_state["show_new_critical_point_dialog"] = False
+    st.session_state["show_edit_project_dialog"] = False
 
     m = folium.Map(
         location=COQUIMBO_DEFAULT_CENTER,
@@ -170,20 +172,4 @@ def render_emergencies_overview_map(
         st.info("Aún no hay emergencias ni puntos críticos georreferenciados en el mapa.")
 
         
-    map_data = st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
-
-    if map_data and map_data.get("last_object_clicked"):
-        click_obj = map_data["last_object_clicked"]
-        c_lat = click_obj.get("lat")
-        c_lng = click_obj.get("lng")
-        if c_lat is not None and c_lng is not None:
-            matched_proj = next(
-                (p for p in projects if p.get("latitude") and p.get("longitude") 
-                 and abs(float(p["latitude"]) - c_lat) < 0.0005 
-                 and abs(float(p["longitude"]) - c_lng) < 0.0005),
-                None
-            )
-            if matched_proj:
-                st.session_state["active_project"] = matched_proj
-                st.session_state["show_new_project_dialog"] = False
-                st.rerun()
+    st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")

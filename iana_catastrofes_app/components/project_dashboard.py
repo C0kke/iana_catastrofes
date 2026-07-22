@@ -147,7 +147,7 @@ def render_project_dashboard():
     render_compact_weather_widget(commune)
 
     with col_h2:
-        if st.button("Ejecutar / Reevaluar Análisis", type="primary", use_container_width=True, help="Ejecuta o reevalúa inmediatamente la emergencia con la Inteligencia Artificial"):
+        if st.button("Ejecutar / Reevaluar Análisis", type="primary", width="stretch", help="Ejecuta o reevalúa inmediatamente la emergencia"):
             with st.spinner("Ejecutando evaluación..."):
                 try:
                     docs = list_project_documents(proj_id)
@@ -186,19 +186,19 @@ def render_project_dashboard():
 
     with col_h3:
         if not read_only:
-            if st.button("Editar Emergencia", use_container_width=True):
+            if st.button("Editar Emergencia", width="stretch"):
                 st.session_state["show_edit_project_dialog"] = True
                 st.rerun()
 
     with col_h4:
         if not read_only:
             if status == "activa":
-                if st.button("Marcar Solucionada", use_container_width=True):
+                if st.button("Marcar Solucionada", width="stretch"):
                     update_project_status(proj_id, "solucionada")
                     st.success("¡Emergencia marcada como Solucionada y archivada!")
                     st.rerun()
             else:
-                if st.button("Reabrir Emergencia", use_container_width=True):
+                if st.button("Reabrir Emergencia", width="stretch"):
                     update_project_status(proj_id, "activa")
                     st.info("Emergencia reabierta como activa.")
                     st.rerun()
@@ -351,7 +351,7 @@ def render_project_dashboard():
         if read_only:
             st.info("Modo Jefatura / Lectura: Puedes revisar las evidencias procesadas en el 'Historial Documental'. La carga de nuevos archivos está restringida a Operadores de Terreno.")
         else:
-            st.write("Sube fotografías de terreno (JPG, PNG), informes de Word (.docx) o expedientes PDF. La Inteligencia Artificial analizará las imágenes y texto para actualizar el estado del evento.")
+            st.write("Sube fotografías de terreno (JPG, PNG), informes de Word (.docx) o expedientes PDF.")
 
             doc_type = st.selectbox(
                 "Tipo de Evidencia Ingresada",

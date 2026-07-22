@@ -59,6 +59,7 @@ def logout_user():
     st.session_state.pop("active_project", None)
     st.session_state["show_new_project_dialog"] = False
     st.session_state["show_edit_project_dialog"] = False
+    st.session_state["show_new_critical_point_dialog"] = False
     if "session_user" in st.query_params:
         try:
             del st.query_params["session_user"]
@@ -87,12 +88,15 @@ def render_login_screen():
             )
             password_input = st.text_input("Contraseña", type="password", placeholder="Ingresa tu clave asignada")
             
-            submit_btn = st.form_submit_button("Ingresar al Sistema", type="primary", use_container_width=True)
+            submit_btn = st.form_submit_button("Ingresar al Sistema", type="primary", width="stretch")
 
             if submit_btn:
                 user = authenticate_user(username_input, password_input)
                 if user:
                     st.session_state["authenticated_user"] = user
+                    st.session_state["show_new_project_dialog"] = False
+                    st.session_state["show_edit_project_dialog"] = False
+                    st.session_state["show_new_critical_point_dialog"] = False
                     st.query_params["session_user"] = user["username"]
                     st.success(f"Bienvenido {user['name']}")
                     st.rerun()
