@@ -53,10 +53,12 @@ def render_emergencies_overview_map(
 ):
     """Renderiza el mapa de monitoreo general con emergencias y marcadores 'X' de Puntos Críticos / Rutas Cortadas."""
     
-    # Garantiza que la interacción con el mapa no active modales.
-    st.session_state["show_new_project_dialog"] = False
-    st.session_state["show_new_critical_point_dialog"] = False
-    st.session_state["show_edit_project_dialog"] = False
+    if not st.session_state.get("show_new_project_dialog"):
+        st.session_state["show_new_project_dialog"] = False
+    if not st.session_state.get("show_new_critical_point_dialog"):
+        st.session_state["show_new_critical_point_dialog"] = False
+    if not st.session_state.get("show_edit_project_dialog"):
+        st.session_state["show_edit_project_dialog"] = False
 
     m = folium.Map(
         location=COQUIMBO_DEFAULT_CENTER,
@@ -91,7 +93,7 @@ def render_emergencies_overview_map(
                     color = "orange"
                     icon_type = "exclamation-sign"
                 elif aff == "Media" or risk == "Riesgo Medio":
-                    color = "yellow"
+                    color = "beige"
                     icon_type = "info-sign"
                 else:
                     color = "green"

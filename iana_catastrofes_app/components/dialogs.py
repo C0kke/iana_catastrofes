@@ -2,6 +2,7 @@ import json
 import os
 import streamlit as st
 from datetime import datetime
+from streamlit_js_eval import get_geolocation
 
 try:
     from chatbot_emergencia_app.app.db import create_project, update_project_details, get_chile_now_iso, create_critical_point, update_critical_point, list_critical_points, delete_critical_point
@@ -149,6 +150,30 @@ def render_new_project_dialog():
         lat_val_str = st.text_input("LATITUD", value=str(st.session_state.get("dlg_lat", "")), placeholder="Ej: -29.9533")
     with col_lng:
         lng_val_str = st.text_input("LONGITUD", value=str(st.session_state.get("dlg_lng", "")), placeholder="Ej: -71.3395")
+
+    col_gps_btn, col_gps_status = st.columns([1.2, 1])
+    with col_gps_btn:
+        if st.button("Usar ubicación actual del dispositivo", key="btn_get_gps", use_container_width=True):
+            st.session_state["request_gps"] = True
+
+    if st.session_state.get("request_gps", False):
+        with col_gps_status:
+            with st.spinner("Obteniendo coordenadas GPS..."):
+                location = get_geolocation()
+                if location:
+                    if "error" in location:
+                        st.error(f"Error GPS: {location['error']['message']}")
+                        st.session_state["request_gps"] = False
+                    else:
+                        coords = location.get("coords", {})
+                        lat = coords.get("latitude")
+                        lng = coords.get("longitude")
+                        if lat is not None and lng is not None:
+                            st.session_state["dlg_lat"] = round(lat, 6)
+                            st.session_state["dlg_lng"] = round(lng, 6)
+                            st.session_state["request_gps"] = False
+                            st.session_state["show_new_project_dialog"] = True
+                            st.rerun()
 
     try:
         final_lat = float(lat_val_str) if lat_val_str else None
@@ -451,10 +476,47 @@ def render_new_critical_point_dialog():
         cur_lng = st.session_state.get("cp_new_lng")
 
         pick_lat, pick_lng = render_location_picker_map(initial_lat=cur_lat, initial_lng=cur_lng, key_prefix="cp_new_picker")
-        if pick_lat != cur_lat or pick_lng != cur_lng:
+        if (pick_lat != cur_lat or pick_lng != cur_lng) and pick_lat is not None and pick_lng is not None:
             st.session_state["cp_new_lat"] = pick_lat
             st.session_state["cp_new_lng"] = pick_lng
-            cur_lat, cur_lng = pick_lat, pick_lng
+            st.session_state["show_new_critical_point_dialog"] = True
+            st.rerun()
+
+        col_lat, col_lng = st.columns(2)
+        with col_lat:
+            lat_val_str = st.text_input("LATITUD", value=str(st.session_state.get("cp_new_lat", "")), placeholder="Ej: -29.9533", key="cp_new_lat_input")
+        with col_lng:
+            lng_val_str = st.text_input("LONGITUD", value=str(st.session_state.get("cp_new_lng", "")), placeholder="Ej: -71.3395", key="cp_new_lng_input")
+
+        try:
+            cur_lat = float(lat_val_str) if lat_val_str else None
+            cur_lng = float(lng_val_str) if lng_val_str else None
+        except ValueError:
+            cur_lat, cur_lng = None, None
+
+        col_gps_btn, col_gps_status = st.columns([1.2, 1])
+        with col_gps_btn:
+            if st.button("Usar ubicación actual del dispositivo", key="btn_get_gps_cp", use_container_width=True):
+                st.session_state["request_gps_cp"] = True
+
+        if st.session_state.get("request_gps_cp", False):
+            with col_gps_status:
+                with st.spinner("Obteniendo coordenadas GPS..."):
+                    location = get_geolocation()
+                    if location:
+                        if "error" in location:
+                            st.error(f"Error GPS: {location['error']['message']}")
+                            st.session_state["request_gps_cp"] = False
+                        else:
+                            coords = location.get("coords", {})
+                            lat = coords.get("latitude")
+                            lng = coords.get("longitude")
+                            if lat is not None and lng is not None:
+                                st.session_state["cp_new_lat"] = round(lat, 6)
+                                st.session_state["cp_new_lng"] = round(lng, 6)
+                                st.session_state["request_gps_cp"] = False
+                                st.session_state["show_new_critical_point_dialog"] = True
+                                st.rerun()
 
         if cur_lat and cur_lng:
             st.success(f"Coordenadas fijadas: {cur_lat}, {cur_lng}")
