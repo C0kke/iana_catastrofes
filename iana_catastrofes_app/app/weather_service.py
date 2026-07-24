@@ -10,7 +10,6 @@ load_dotenv()
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "").strip()
 CHILE_TZ = timezone(timedelta(hours=-4))
 
-# Coordenadas geográficas exactas de las 15 comunas de la Región de Coquimbo
 COQUIMBO_COMMUNES_COORDS = {
     "La Serena": {"lat": -29.9027, "lon": -71.2519, "altitude_m": 28},
     "Coquimbo": {"lat": -29.9533, "lon": -71.3436, "altitude_m": 15},

@@ -65,11 +65,17 @@ st.session_state.setdefault("show_new_critical_point_dialog", False)
 st.session_state.setdefault("active_edit_cp", None)
 st.session_state.setdefault("active_shift", "1")
 
+current_user = get_current_user()
+if not current_user:
+    render_login_screen()
+    st.stop()
+
 param_proj_id = st.query_params.get("selected_proj_id")
 if param_proj_id:
     proj_obj = get_project_by_id(param_proj_id)
     if proj_obj:
         st.session_state["active_project"] = proj_obj
+        st.session_state["active_tab"] = "Centro de Mando"
         st.session_state["show_new_project_dialog"] = False
         st.session_state["show_edit_project_dialog"] = False
         st.session_state["show_new_critical_point_dialog"] = False
@@ -79,11 +85,6 @@ if param_proj_id:
             except Exception:
                 pass
         st.rerun()
-
-current_user = get_current_user()
-if not current_user:
-    render_login_screen()
-    st.stop()
 
 render_sidebar()
 

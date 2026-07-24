@@ -285,7 +285,7 @@ def render_new_project_dialog():
                 st.error("Error al guardar emergencia. Intenta nuevamente.")
                 return
 
-            st.success(f"¡Emergencia '{name}' registrada exitosamente! (ID: {saved_id})")
+            st.success(f"¡Emergencia '{name}' registrada exitosamente")
             st.session_state["show_new_project_dialog"] = False
             st.session_state["active_project"] = new_p
             st.session_state.pop("dlg_lat", None)
@@ -425,6 +425,7 @@ TYPE_LABELS = {
     "aluvion": "Aluvión",
     "caida_puente": "Caída de Puente",
     "aislamiento": "Aislamiento",
+    "campamento": "Campamento",
     "otro": "Otro"
 }
 
@@ -456,7 +457,7 @@ def render_new_critical_point_dialog():
         with col_t1:
             point_type = st.selectbox(
                 "TIPO DE AFECTACIÓN VIAL / CRÍTICA *",
-                options=["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "otro"],
+                options=["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "campamento", "otro"],
                 format_func=lambda x: TYPE_LABELS.get(x, x),
                 index=0,
                 key="cp_create_type"
@@ -635,9 +636,9 @@ def render_edit_critical_point_dialog(cp: dict):
     col_t1, col_t2 = st.columns(2)
     with col_t1:
         cur_type = cp.get("point_type", "ruta_cortada")
-        type_opts = ["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "otro"]
+        type_opts = ["ruta_cortada", "socavon", "derrumbe", "aluvion", "caida_puente", "aislamiento", "campamento", "otro"]
         t_idx = type_opts.index(cur_type) if cur_type in type_opts else 0
-        point_type = st.selectbox("TIPO DE AFECTACIÓN", options=type_opts, index=t_idx)
+        point_type = st.selectbox("TIPO DE AFECTACIÓN", options=type_opts, format_func=lambda x: TYPE_LABELS.get(x, x), index=t_idx)
 
     with col_t2:
         cur_status = cp.get("status", "activo")

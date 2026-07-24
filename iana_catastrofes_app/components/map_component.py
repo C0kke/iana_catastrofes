@@ -3,6 +3,14 @@ import folium
 from streamlit_folium import st_folium
 from typing import Optional, Tuple, List, Dict, Any
 
+try:
+    from chatbot_emergencia_app.app.auth import get_current_user
+except ModuleNotFoundError:
+    try:
+        from iana_catastrofes_app.app.auth import get_current_user
+    except ModuleNotFoundError:
+        from app.auth import get_current_user
+
 COQUIMBO_DEFAULT_CENTER = (-29.9533, -71.3395)
 
 def render_location_picker_map(
@@ -112,12 +120,7 @@ def render_emergencies_overview_map(
                     <small><b>Sector:</b> {sector}</small><br/>
                     <small><b>Afectación Real:</b> {aff}</small><br/>
                     <small><b>Riesgo Personas:</b> {risk}</small><br/>
-                    <small><b>Alerta Global:</b> <span style="font-weight: bold; color: #0284c7;">{alert_text}</span></small><br/>
-                    <div style="margin-top: 10px; text-align: center;">
-                        <a href="?selected_proj_id={p_id}" target="_self" style="display: inline-block; padding: 6px 14px; background-color: #0284c7; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
-                            Ir a Control / Chat de Emergencia
-                        </a>
-                    </div>
+                    <small><b>Alerta Global:</b> <span style="font-weight: bold; color: #0284c7;">{alert_text}</span></small>
                 </div>
                 """
                 
@@ -140,30 +143,46 @@ def render_emergencies_overview_map(
                 cp_lat_f = float(cp_lat)
                 cp_lng_f = float(cp_lng)
                 cp_name = cp.get("name", "Punto Crítico")
-                cp_type = cp.get("point_type", "Ruta Cortada")
+                cp_type = cp.get("point_type", "ruta_cortada")
                 cp_sev = cp.get("severity", "CRÍTICO")
                 cp_desc = cp.get("description", "")
                 cp_commune = cp.get("commune", "")
                 cp_sector = cp.get("sector", "")
                 cp_status = cp.get("status", "activo")
 
+                is_campamento = (cp_type == "campamento")
+                header_title = "CAMPAMENTO REGISTRADO" if is_campamento else "RUTA CORTADA / PUNTO CRÍTICO"
+                header_color = "#7c3aed" if is_campamento else "#dc2626"
+                type_display = "Campamento" if is_campamento else cp_type
+
+                if cp_status == "resuelto":
+                    marker_color = "gray"
+                elif is_campamento:
+                    marker_color = "purple"
+                else:
+                    marker_color = "darkred"
+
+                marker_icon = "home" if is_campamento else "remove"
+
                 cp_popup = f"""
                 <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 210px; padding: 4px;">
-                    <b style="color: #dc2626; font-size: 1.05rem;">RUTA CORTADA / PUNTO CRÍTICO</b><br/>
+                    <b style="color: {header_color}; font-size: 1.05rem;">{header_title}</b><br/>
                     <b>{cp_name}</b><br/>
-                    <small><b>Tipo:</b> {cp_type}</small><br/>
-                    <small><b>Severidad:</b> <span style="color: #dc2626; font-weight: bold;">{cp_sev}</span></small><br/>
+                    <small><b>Tipo:</b> {type_display}</small><br/>
+                    <small><b>Severidad:</b> <span style="color: {header_color}; font-weight: bold;">{cp_sev}</span></small><br/>
                     <small><b>Ubicación:</b> {cp_commune} ({cp_sector})</small><br/>
                     <small><b>Estado:</b> {cp_status.upper()}</small><br/>
                     <p style="margin-top: 6px; font-size: 0.82rem; color: #475569;">{cp_desc}</p>
                 </div>
                 """
 
+                tooltip_text = f"CAMPAMENTO: {cp_name} ({cp_commune})" if is_campamento else f"RUTA CORTADA: {cp_name} ({cp_commune})"
+
                 folium.Marker(
                     location=[cp_lat_f, cp_lng_f],
-                    popup=folium.Popup(cp_popup, max_width=280),
-                    tooltip=f"RUTA CORTADA: {cp_name} ({cp_commune})",
-                    icon=folium.Icon(color="gray" if cp_status == "resuelto" else "darkred", icon="remove", prefix="glyphicon")
+                    popup=folium.Popup(cp_popup, max_width=290),
+                    tooltip=tooltip_text,
+                    icon=folium.Icon(color=marker_color, icon=marker_icon, prefix="glyphicon")
                 ).add_to(m)
                 
                 valid_markers += 1
@@ -173,5 +192,37 @@ def render_emergencies_overview_map(
     if valid_markers == 0:
         st.info("Aún no hay emergencias ni puntos críticos georreferenciados en el mapa.")
 
+    map_data = st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
+
+    if map_data and map_data.get("last_object_clicked"):
+        click_obj = map_data["last_object_clicked"]
+        c_lat = click_obj.get("lat")
+        c_lng = click_obj.get("lng")
+        if c_lat is not None and c_lng is not None:
+            matched_proj = next(
+                (p for p in projects if p.get("latitude") and p.get("longitude") 
+                 and abs(float(p["latitude"]) - c_lat) < 0.0008 
+                 and abs(float(p["longitude"]) - c_lng) < 0.0008),
+                None
+            )
+            if matched_proj:
+                st.session_state["selected_map_project"] = matched_proj
+
+    selected_proj = st.session_state.get("selected_map_project")
+    if selected_proj:
+        proj_name = selected_proj.get("name", "Emergencia")
+        proj_commune = selected_proj.get("commune", "")
         
-    st_folium(m, height=height, width=None, use_container_width=True, key="overview_emergencies_map")
+        st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        col_info, col_btn = st.columns([3, 1])
+        with col_info:
+            st.markdown(f"**Emergencia Seleccionada en Mapa:** <span style='color: var(--blue-title); font-weight: 700;'>{proj_name}</span> ({proj_commune})", unsafe_allow_html=True)
+        with col_btn:
+            if st.button("Ir a vista de Evento", type="primary", key="btn_nav_selected_map_event", width="stretch"):
+                st.session_state["active_project"] = selected_proj
+                st.session_state["active_tab"] = "Centro de Mando"
+                st.session_state["show_new_project_dialog"] = False
+                st.session_state["show_edit_project_dialog"] = False
+                st.session_state["show_new_critical_point_dialog"] = False
+                st.session_state.pop("selected_map_project", None)
+                st.rerun()
