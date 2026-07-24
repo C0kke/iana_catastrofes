@@ -16,9 +16,8 @@ except ModuleNotFoundError:
 
 
 def render_weather_monitoring_tab(default_commune: str = "Coquimbo"):
-    """Renderiza el tablero completo de monitoreo climático regional (-1d a +3d) para la pantalla de bienvenida."""
     st.markdown("### Centro de Monitoreo Climático Regional - Región de Coquimbo")
-    st.caption("Integración en tiempo real con la Dirección Meteorológica de Chile (DMC) y OpenWeather One Call API 3.0/4.0 (-1 Día atrás a +3 Días proyectados).")
+    st.caption("Integración en tiempo real con la Dirección Meteorológica de Chile (DMC) y OpenWeather One Call API")
 
     communes_list = sorted(list(COQUIMBO_COMMUNES_COORDS.keys()))
     default_idx = communes_list.index(default_commune) if default_commune in communes_list else 0
@@ -222,7 +221,7 @@ def render_compact_weather_widget(commune_name: str):
                     <strong style="color: #29B6F6; font-size: 1.05rem;">{sum_4d.get('day_minus_1_rain_mm', 0)} mm</strong> acumulados
                 </div>
                 <div style="flex: 1; min-width: 130px; background-color: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">
-                    <span style="color: #aaa; font-size: 0.75rem;">PRÓXIMOS 3 DÍAS (+72h)</span><br/>
+                    <span style="color: #aaa; font-size: 0.75rem;">PRÓXIMOS 3 DÍAS</span><br/>
                     <strong style="color: #FFA726; font-size: 1.05rem;">{sum_4d.get('day_0_today_rain_mm', 0) + sum_4d.get('day_plus_1_rain_mm', 0) + sum_4d.get('day_plus_2_rain_mm', 0):.1f} mm</strong> proyectados
                 </div>
             </div>

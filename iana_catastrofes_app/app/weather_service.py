@@ -132,27 +132,18 @@ def fetch_openweather_timemachine(lat: float, lon: float, dt_timestamp: int) -> 
     return None
 
 def generate_synthetic_realistic_weather(commune: str) -> Dict[str, Any]:
+    """Genera datos meteorológicos base limpios (sin lluvias ni alertas falsas) utilizando la fecha actual del sistema."""
     coords = COQUIMBO_COMMUNES_COORDS.get(commune, {"altitude_m": 100})
-    alt = coords["altitude_m"]
-
+    alt = coords.get("altitude_m", 100)
     is_interior = alt > 300
-    temp_base = 13.5 if not is_interior else 16.0
-    rain_base = 12.4 if is_interior else 8.2
+    temp_base = 15.0 if not is_interior else 17.0
 
     now = datetime.now(CHILE_TZ)
     
     hourly = []
     for h in range(-24, 73):
         t = now + timedelta(hours=h)
-        dist_from_peak = abs(h - 6)
-        if dist_from_peak < 18:
-            rain_h = max(0.0, round((18 - dist_from_peak) * (rain_base / 20.0), 1))
-            wind_h = round(20.0 + (18 - dist_from_peak) * 1.8, 1)
-        else:
-            rain_h = 0.0
-            wind_h = round(12.0 + (h % 5), 1)
-
-        temp_h = round(temp_base + (4.0 if (8 <= t.hour <= 18) else -2.5), 1)
+        temp_h = round(temp_base + (3.0 if (8 <= t.hour <= 18) else -2.0), 1)
 
         hourly.append({
             "dt": int(t.timestamp()),
@@ -160,43 +151,29 @@ def generate_synthetic_realistic_weather(commune: str) -> Dict[str, Any]:
             "is_past": h < 0,
             "is_future": h >= 0,
             "temp_c": temp_h,
-            "rain_mm": rain_h,
-            "wind_kmh": wind_h,
-            "pop_percent": min(100, int(rain_h * 25)) if rain_h > 0 else 10
+            "rain_mm": 0.0,
+            "wind_kmh": 10.0,
+            "pop_percent": 0
         })
-
-    past_24h_rain = round(sum(item["rain_mm"] for item in hourly if item["is_past"]), 1)
-    today_rain = round(sum(item["rain_mm"] for item in hourly if 0 <= (datetime.fromtimestamp(item["dt"], tz=CHILE_TZ) - now).total_seconds() <= 86400), 1)
-    day1_rain = round(sum(item["rain_mm"] for item in hourly if 86400 < (datetime.fromtimestamp(item["dt"], tz=CHILE_TZ) - now).total_seconds() <= 172800), 1)
-    day2_rain = round(sum(item["rain_mm"] for item in hourly if 172800 < (datetime.fromtimestamp(item["dt"], tz=CHILE_TZ) - now).total_seconds() <= 259200), 1)
 
     return {
         "commune": commune,
         "is_simulated": True,
         "current": {
             "temp_c": round(temp_base, 1),
-            "humidity_percent": 88,
-            "wind_kmh": 28.5,
-            "rain_last_hour_mm": 2.4,
-            "condition": "Lluvia Moderada / Frente de Mal Tiempo",
-            "icon": "🌧️"
+            "humidity_percent": 65,
+            "wind_kmh": 10.0,
+            "rain_last_hour_mm": 0.0,
+            "condition": "Sin precipitaciones / Condición Normal",
+            "icon": "🌤️"
         },
-        "alerts": [
-            {
-                "source": "DMC (Oficial Chile)",
-                "event": "Aviso Meteorológico - Precipitaciones Moderadas a Intensas",
-                "severity": "ALTA",
-                "description": f"Se pronostican lluvias concentradas y ráfagas de viento de hasta 55 km/h en la comuna de {commune}.",
-                "start_time": "Vigente",
-                "end_time": "+48 Horas"
-            }
-        ],
+        "alerts": [],
         "summary_4days": {
-            "day_minus_1_rain_mm": past_24h_rain,
-            "day_0_today_rain_mm": today_rain,
-            "day_plus_1_rain_mm": day1_rain,
-            "day_plus_2_rain_mm": day2_rain,
-            "total_4day_rain_mm": round(past_24h_rain + today_rain + day1_rain + day2_rain, 1)
+            "day_minus_1_rain_mm": 0.0,
+            "day_0_today_rain_mm": 0.0,
+            "day_plus_1_rain_mm": 0.0,
+            "day_plus_2_rain_mm": 0.0,
+            "total_4day_rain_mm": 0.0
         },
         "hourly_timeline": hourly,
         "isotherm_0_m": 2400 if is_interior else 2100
