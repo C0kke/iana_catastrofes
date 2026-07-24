@@ -277,7 +277,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
 
     with col_btn:
         st.markdown("<div style='margin-top: 1.7rem;'></div>", unsafe_allow_html=True)
-        if st.button("Ejecutar Análisis Comunal IA", type="primary", key="btn_run_commune_ai_eval", width="stretch", help="Analiza todas las emergencias activas de la zona e integra la afectación por servicios con Inteligencia Artificial"):
+        if st.button("Ejecutar Análisis Comunal", type="primary", key="btn_run_commune_ai_eval", width="stretch", help="Analiza todas las emergencias activas de la zona e integra la afectación por servicios con Inteligencia Artificial"):
             with st.spinner(f"Ejecutando evaluación inteligente consolidada para {selected_commune}..."):
                 try:
                     eval_res = analyze_communal_dashboard(
@@ -286,9 +286,9 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                         critical_points=filtered_cp
                     )
                     st.session_state[f"commune_ai_eval_{selected_commune}"] = eval_res
-                    st.success("¡Análisis Comunal con IA ejecutado y actualizado exitosamente!")
+                    st.success("¡Análisis Comunal ejecutado exitosamente!")
                 except Exception as e:
-                    st.error(f"Error al ejecutar el análisis con IA: {e}")
+                    st.error(f"Error al ejecutar el análisis: {e}")
 
     # 1. KPIs Críticos del Catastro
     c_active = [p for p in filtered_projects if (p.get("status") or "activa") == "activa"]
@@ -317,7 +317,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
     ai_eval: Optional[Any] = st.session_state.get(f"commune_ai_eval_{selected_commune}")
     if ai_eval:
         st.markdown("---")
-        st.markdown(f"#### 🤖 Diagnóstico e Inteligencia Operativa Comunal IA — **{selected_commune.upper()}**")
+        st.markdown(f"#### Diagnóstico e Inteligencia Operativa -- **{selected_commune.upper()}**")
         
         alert_lvl = getattr(ai_eval, "communal_alert_level", "ALTA - ALERTA MÚLTIPLE")
         alert_bg = "#dc2626" if "CRÍTICA" in alert_lvl.upper() else ("#d97706" if "ALTA" in alert_lvl.upper() else "#0284c7")
@@ -335,7 +335,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
 
         tab_ai1, tab_ai2, tab_ai3 = st.tabs([
             "Afectación por Servicios y Sectores",
-            "Recomendaciones Estratégicas de IA",
+            "Recomendaciones Estratégicas",
             "Verificación Normativa (Ley 21.364 / D104)"
         ])
 
@@ -549,56 +549,56 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
     st.markdown("---")
 
     # 4. Generación y Exportación de Informes Ejecutivos por Entidad en PDF
-    st.markdown("#### Generación y Exportación de Informes Ejecutivos en PDF")
-    st.caption("Selecciona la entidad técnico-operativa de destino para exportar un informe oficial en formato PDF listo para envío e impresión.")
+    # st.markdown("#### Generación y Exportación de Informes Ejecutivos en PDF")
+    # st.caption("Selecciona la entidad técnico-operativa de destino para exportar un informe oficial en formato PDF listo para envío e impresión.")
 
-    col_e1, col_e2 = st.columns([2, 1])
-    with col_e1:
-        entity_choice = st.selectbox(
-            "Entidad Destinataria del Informe",
-            options=[
-                "MOP / Dirección de Vialidad (Conectividad y Rutas Cortadas)",
-                "CGE (Cortes de Suministro Eléctrico y Postación)",
-                "Aguas del Valle (Matrices, Tuberías y Red Sanitaria)",
-                "SENAPRED / Municipalidad (Informe ALFA Ejecutivo)"
-            ],
-            key="pdf_entity_selector"
-        )
-    
-    key_map = {
-        "MOP / Dirección de Vialidad (Conectividad y Rutas Cortadas)": "MOP",
-        "CGE (Cortes de Suministro Eléctrico y Postación)": "CGE",
-        "Aguas del Valle (Matrices, Tuberías y Red Sanitaria)": "AGUAS",
-        "SENAPRED / Municipalidad (Informe ALFA Ejecutivo)": "SENAPRED"
-    }
-    sel_key = key_map.get(entity_choice, "SENAPRED")
+    # col_e1, col_e2 = st.columns([2, 1])
+    # with col_e1:
+    #     entity_choice = st.selectbox(
+    #        "Entidad Destinataria del Informe",
+    #        options=[
+    #            "MOP / Dirección de Vialidad (Conectividad y Rutas Cortadas)",
+    ##            "CGE (Cortes de Suministro Eléctrico y Postación)",
+    #            "Aguas del Valle (Matrices, Tuberías y Red Sanitaria)",
+    #            "SENAPRED / Municipalidad (Informe ALFA Ejecutivo)"
+    #        ],
+    #        key="pdf_entity_selector"
+     #   )
+    # 
+    #key_map = {
+    #    "MOP / Dirección de Vialidad (Conectividad y Rutas Cortadas)": "MOP",
+    #    "CGE (Cortes de Suministro Eléctrico y Postación)": "CGE",
+    #    "Aguas del Valle (Matrices, Tuberías y Red Sanitaria)": "AGUAS",
+    #    "SENAPRED / Municipalidad (Informe ALFA Ejecutivo)": "SENAPRED"
+  #}
+  #sel_key = key_map.get(entity_choice, "SENAPRED")
 
-    with col_e2:
-        st.markdown("<br/>", unsafe_allow_html=True)
-        pdf_bytes = generate_pdf_report(
-            entity_key=sel_key,
-            commune_filter=selected_commune,
-            projects=all_projects,
-            critical_pts=critical_points
-        )
-        file_commune_str = selected_commune.replace(" ", "_")
-        filename_map = {
-            "MOP": f"Informe_MOP_Vialidad_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-            "CGE": f"Informe_CGE_Electrica_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-            "AGUAS": f"Informe_Aguas_del_Valle_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-            "SENAPRED": f"Informe_SENAPRED_ALFA_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
-        }
-        custom_filename = filename_map.get(sel_key, f"Informe_{sel_key}_{file_commune_str}.pdf")
-
-        st.download_button(
-            label="Descargar Informe en PDF",
-            data=pdf_bytes,
-            file_name=custom_filename,
-            mime="application/pdf",
-            type="primary",
-            width="stretch"
-        )
-
+   #with col_e2:
+   #    st.markdown("<br/>", unsafe_allow_html=True)
+   #    pdf_bytes = generate_pdf_report(
+   #        entity_key=sel_key,
+   #        commune_filter=selected_commune,
+   #        projects=all_projects,
+   #        critical_pts=critical_points
+   #    )
+   #    file_commune_str = selected_commune.replace(" ", "_")
+   #    filename_map = {
+   #        "MOP": f"Informe_MOP_Vialidad_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+   #        "CGE": f"Informe_CGE_Electrica_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+   #        "AGUAS": f"Informe_Aguas_del_Valle_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+   #        "SENAPRED": f"Informe_SENAPRED_ALFA_{file_commune_str}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+   #    }
+   #    custom_filename = filename_map.get(sel_key, f"Informe_{sel_key}_{file_commune_str}.pdf")
+#
+    #    st.download_button(
+    #        label="Descargar Informe en PDF",
+    #        data=pdf_bytes,
+    #        file_name=custom_filename,
+    #        mime="application/pdf",
+    #        type="primary",
+    #        width="stretch"
+    #    )
+#
     st.markdown("---")
 
     st.markdown("#### Matriz de Monitoreo por Comuna Afectada")
