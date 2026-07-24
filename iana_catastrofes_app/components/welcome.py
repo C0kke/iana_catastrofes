@@ -36,7 +36,7 @@ def render_welcome_page():
 
     st.markdown("""
         <div style="background-color: var(--card-bg); border-radius: 12px; padding: 1.8rem; border: 1px solid var(--card-border); margin-bottom: 1.2rem;">
-            <h1 style="color: var(--blue-title); margin-top: 0; font-size: 2.2rem; font-weight: 800;">IANA - EMERGENCIA</h1>
+            <h1 style="color: var(--blue-title); margin-top: 0; font-size: 2.2rem; font-weight: 800;">POGE - CEM Emergencias</h1>
             <p style="color: var(--text-primary); font-size: 1.05rem; line-height: 1.5; margin-bottom: 0;">
                 Herramienta de análisis, criterios y toma de decisiones para la coordinación de cuadrillas y respuesta rápida en la <strong>Región de Coquimbo</strong> ante anegamientos, temporales y aislamiento municipal.
             </p>

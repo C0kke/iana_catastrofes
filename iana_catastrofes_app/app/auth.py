@@ -1,5 +1,8 @@
+import os
 import streamlit as st
 from typing import Optional, Dict, Any
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 USERS_DB = {
     "Jefatura": {
@@ -68,14 +71,14 @@ def logout_user():
     st.rerun()
 
 def render_login_screen():
-    st.markdown("""
-        <div style="max-width: 440px; min-width: 400px; margin: 4rem auto 2rem auto; background-color: var(--app-bg); border-radius: 12px; padding: 2.2rem; border: 1px solid var(--card-border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-            <h2 style="color: var(--blue-title); margin-top: 0; font-size: 1.8rem; font-weight: 800;">IANA - EMERGENCIA</h2>
-            <p style="color: var(--text-primary); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                Sistema de Control y Monitoreo Municipal en Tiempo Real
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        logo_png = os.path.join(BASE_DIR, "data", "LOGO POGE.png")
+        if os.path.exists(logo_png):
+            st.image(logo_png, use_container_width=True)
+        else:
+            st.markdown("<h2 style='color: var(--blue-title); font-size: 1.8rem; font-weight: 800; text-align: center;'>POGE - CEM Emergencias</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color: var(--text-primary); font-size: 0.95rem; text-align: center; margin-bottom: 1.5rem;'>Sistema de Control y Monitoreo Municipal en Tiempo Real</p>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:

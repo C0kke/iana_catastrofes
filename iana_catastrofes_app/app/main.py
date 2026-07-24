@@ -42,7 +42,7 @@ except ModuleNotFoundError:
         )
 
 app = FastAPI(
-    title=f"IANA - EMERGENCIA v{__version__}",
+    title=f"POGE - CEM Emergencias v{__version__}",
     description="API de Análisis en Tiempo Real para Emergencias"
 )
 
@@ -73,7 +73,7 @@ except ModuleNotFoundError:
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "version": __version__, "service": "IANA - EMERGENCIA API"}
+    return {"status": "ok", "version": __version__, "service": "POGE - CEM Emergencias API"}
 
 @app.get("/api/weather/{commune}")
 def get_commune_weather(commune: str):

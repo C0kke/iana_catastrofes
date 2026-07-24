@@ -62,20 +62,25 @@ def load_app_styles(base_dir: str):
     if combined_css:
         st.markdown(f"<style>{' '.join(combined_css)}</style>", unsafe_allow_html=True)
 
-st.set_page_config(
-    page_title=f"IANA - EMERGENCIA",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-load_app_styles(BASE_DIR)
-
 DATA_DIR = os.path.join(BASE_DIR, "data")
 UPLOADS = os.path.join(DATA_DIR, "uploads")
 RESULTS = os.path.join(DATA_DIR, "results")
 
 os.makedirs(UPLOADS, exist_ok=True)
 os.makedirs(RESULTS, exist_ok=True)
+
+ico_path = os.path.join(DATA_DIR, "LOGO POGE.ico")
+if not os.path.exists(ico_path):
+    ico_path = os.path.join(DATA_DIR, "LOGO POGE.png")
+
+st.set_page_config(
+    page_title="POGE - CEM Emergencias",
+    page_icon=ico_path if os.path.exists(ico_path) else "⚡",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+load_app_styles(BASE_DIR)
 
 st.session_state.setdefault("projects", [])
 st.session_state.setdefault("active_project", None)

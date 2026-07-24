@@ -1,4 +1,7 @@
+import os
 import streamlit as st
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from chatbot_emergencia_app.app.db import list_projects
@@ -16,7 +19,11 @@ def render_sidebar():
     read_only = is_read_only()
 
     with st.sidebar:
-        st.markdown("<h2 style='color: var(--blue-title); font-weight: 800; margin-bottom: 0;'>IANA - EMERGENCIA</h2>", unsafe_allow_html=True)
+        logo_png = os.path.join(BASE_DIR, "data", "LOGO POGE.png")
+        if os.path.exists(logo_png):
+            st.image(logo_png, use_container_width=True)
+        else:
+            st.markdown("<h2 style='color: var(--blue-title); font-weight: 800; margin-bottom: 0;'>POGE - CEM Emergencias</h2>", unsafe_allow_html=True)
         st.divider()
 
         if user:

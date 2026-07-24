@@ -19,7 +19,7 @@ class ExecutivePDF(FPDF):
     def header(self):
         self.set_font('Helvetica', 'B', 14)
         self.set_text_color(2, 132, 199)
-        self.cell(0, 10, 'IANA - EMERGENCIA | INFORME TÉCNICO EJECUTIVO', border=False, new_x="LMARGIN", new_y="NEXT", align='L')
+        self.cell(0, 10, 'POGE - CEM Emergencias | INFORME TÉCNICO EJECUTIVO', border=False, new_x="LMARGIN", new_y="NEXT", align='L')
         self.set_font('Helvetica', 'I', 9)
         self.set_text_color(100, 116, 139)
         self.cell(0, 5, 'Centro de Mando Digital & Gestión del Riesgo - Región de Coquimbo', border=False, new_x="LMARGIN", new_y="NEXT", align='L')
@@ -30,7 +30,7 @@ class ExecutivePDF(FPDF):
         self.set_y(-15)
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(148, 163, 184)
-        self.cell(0, 10, f'Página {self.page_no()}/{{nb}} - Documento de Control IANA - EMERGENCIA', align='C')
+        self.cell(0, 10, f'Página {self.page_no()}/{{nb}} - Documento de Control POGE - CEM Emergencias', align='C')
 
 def sanitize_pdf_text(text: str) -> str:
     """Reemplaza caracteres especiales para compatibilidad limpia con FPDF."""
