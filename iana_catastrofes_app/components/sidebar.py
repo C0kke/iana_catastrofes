@@ -17,13 +17,11 @@ def render_sidebar():
 
     with st.sidebar:
         st.markdown("<h2 style='color: var(--blue-title); font-weight: 800; margin-bottom: 0;'>IANA - EMERGENCIA</h2>", unsafe_allow_html=True)
-
-        st.caption("Sistema de Registro y Gestión en Tiempo Real")
         st.divider()
 
         if user:
             st.markdown(f"""
-                <div style="background-color: var(--card-bg); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 1rem;">
+                <div style="background-color: var(--card-bg); padding: 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 0px;">
                     <div style="font-weight: bold; color: var(--blue-title); font-size: 0.95rem;">{user.get('name')}</div>
                     <small style="color: var(--text-secondary);">{user.get('title')}</small><br/>
                 </div>
@@ -42,18 +40,17 @@ def render_sidebar():
             st.rerun()
 
         if not read_only:
-            col_b1, col_b2 = st.columns([1.1, 1.0])
-            with col_b1:
-                if st.button("+ Emergencia", width="stretch", type="primary", key="btn_new_project_trigger"):
-                    st.session_state["show_new_project_dialog"] = True
-                    st.session_state["show_new_critical_point_dialog"] = False
-                    st.rerun()
-            with col_b2:
-                if st.button("Punto Crítico", width="stretch", type="secondary", key="btn_new_cp_trigger"):
-                    st.session_state["show_new_critical_point_dialog"] = True
-                    st.session_state["show_new_project_dialog"] = False
-                    st.rerun()
-            st.markdown("---")
+            if st.button("+ Registrar Emergencia", width="stretch", key="btn_new_project_trigger"):
+                st.session_state["show_new_project_dialog"] = True
+                st.session_state["show_new_critical_point_dialog"] = False
+                st.rerun()
+
+            if st.button("+ Punto Crítico", width="stretch", key="btn_new_cp_trigger"):
+                st.session_state["show_new_critical_point_dialog"] = True
+                st.session_state["show_new_project_dialog"] = False
+                st.rerun()
+
+        st.divider()
 
         st.markdown("### Emergencias Activas")
         

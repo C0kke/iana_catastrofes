@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;0,900;1,700&display=swap');
+
+html,
+body,
+[class*="css"] {
+    font-family: var(--font-body);
+    background-color: var(--azul-noche) !important;
+    color: var(--blanco) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading) !important;
+    color: var(--azul-cielo) !important;
+    letter-spacing: -0.02em;
+}
+
+h1 {
+    font-weight: 800 !important;
+}
+
+h2,
+h3 {
+    font-weight: 700 !important;
+}
+
+h4,
+h5,
+h6 {
+    font-weight: 600 !important;
+}
+
+p,
+span,
+label,
+li {
+    font-family: var(--font-body);
+    color: var(--gris-claro);
+}
+
+[data-theme="dark"],
+[data-theme="light"],
+.stApp {
+    background-color: var(--azul-noche) !important;
+    color: var(--blanco) !important;
+}
+
+div[data-testid="stHeader"],
+header[data-testid="stHeader"],
+.stAppHeader,
+.stAppToolbar,
+div[data-testid="stAppToolbar"] {
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+div[data-testid="stToolbarActions"],
+div[data-testid="stToolbarActionButton"],
+div[class*="stToolbarActions"],
+.stMainMenu,
+.stAppViewerBadge,
+.stViewerBadge,
+.stDeployButton,
+.stAppDeployButton,
+div[data-testid="stMainMenu"],
+div[data-testid="stMainMenuButton"],
+div[data-testid="stAppViewerBadge"],
+div[data-testid="stAppDeployButton"],
+div[data-testid="stDeployButton"],
+div[data-testid="stStatusWidget"],
+div[data-testid="stDecoration"],
+div[class*="stAppViewerBadge"],
+div[class*="stViewerBadge"],
+div[class*="stAppDeployButton"],
+div[class*="stDeployButton"],
+div[class*="viewerBadge"],
+div[class*="ViewerBadge"],
+#MainMenu,
+footer,
+button[title*="Manage app"],
+button[data-testid="stMainMenuButton"],
+a[href*="streamlit.io"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0px !important;
+    width: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+.linea-acento,
+hr,
+div[data-testid="stDivider"],
+div[data-testid="stDivider"]>div {
+    border: none !important;
+    height: 2px !important;
+    background: var(--dorado) !important;
+    background-color: var(--dorado) !important;
+    margin: 0.5rem 0 1.5rem !important;
+}

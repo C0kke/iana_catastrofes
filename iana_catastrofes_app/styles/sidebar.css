@@ -1,0 +1,155 @@
+section[data-testid="stSidebar"] {
+    background-color: var(--azul-noche) !important;
+    border-right: 1px solid var(--border-subtle) !important;
+}
+
+section[data-testid="stSidebar"] * {
+    color: var(--gris-claro);
+}
+
+section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.5rem !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stElementContainer"] {
+    margin-top: 4px !important;
+    margin-bottom: 8px !important;
+}
+
+div[data-testid="stSidebarHeader"],
+div[data-testid="stCollapsedControl"],
+button[data-testid="stSidebarCollapseButton"],
+button[aria-label*="sidebar"],
+button[aria-label*="Sidebar"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 999999 !important;
+}
+
+section[data-testid="stSidebar"] hr,
+section[data-testid="stSidebar"] div[data-testid="stDivider"],
+section[data-testid="stSidebar"] div[data-testid="stDivider"]>div {
+    border: none !important;
+    height: 2px !important;
+    background: var(--dorado) !important;
+    background-color: var(--dorado) !important;
+    margin: 0.5rem 0 1.5rem !important;
+}
+
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+    margin-top: 0.2rem !important;
+    margin-bottom: 0.2rem !important;
+}
+
+section[data-testid="stSidebar"] button,
+section[data-testid="stSidebar"] .stButton>button {
+    background-color: var(--tarjeta-oscura) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--blanco) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out !important;
+    margin-bottom: 0px !important;
+}
+
+section[data-testid="stSidebar"] button *,
+section[data-testid="stSidebar"] .stButton>button * {
+    color: var(--blanco) !important;
+    font-weight: 500 !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Cerrar Sesión"] {
+    background-color: var(--azul-petroleo) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--gris-claro) !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Cerrar Sesión"] * {
+    color: var(--gris-claro) !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Cerrar Sesión"]:hover,
+section[data-testid="stSidebar"] button[aria-label*="Cerrar Sesión"]:hover * {
+    border-color: var(--rojo-alerta) !important;
+    background-color: rgba(255, 77, 77, 0.12) !important;
+    color: var(--rojo-alerta) !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Inicio"],
+section[data-testid="stSidebar"] button[aria-label*="Mapa General"],
+section[data-testid="stSidebar"] button[aria-label*="Emergencia"]:not([aria-label*="•"]):not([aria-label*="[Activa]"]),
+section[data-testid="stSidebar"] button[aria-label*="Punto Crítico"],
+section[data-testid="stSidebar"] button[aria-label*="PUNTO CRÍTICO"] {
+    background-color: var(--dorado) !important;
+    border: 1px solid var(--dorado) !important;
+    color: var(--azul-noche) !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Inicio"] *,
+section[data-testid="stSidebar"] button[aria-label*="Mapa General"] *,
+section[data-testid="stSidebar"] button[aria-label*="Emergencia"]:not([aria-label*="•"]):not([aria-label*="[Activa]"]) *,
+section[data-testid="stSidebar"] button[aria-label*="Punto Crítico"] *,
+section[data-testid="stSidebar"] button[aria-label*="PUNTO CRÍTICO"] * {
+    color: var(--azul-noche) !important;
+    font-weight: 800 !important;
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Inicio"]:hover,
+section[data-testid="stSidebar"] button[aria-label*="Mapa General"]:hover,
+section[data-testid="stSidebar"] button[aria-label*="Emergencia"]:not([aria-label*="•"]):not([aria-label*="[Activa]"]):hover,
+section[data-testid="stSidebar"] button[aria-label*="Punto Crítico"]:hover,
+section[data-testid="stSidebar"] button[aria-label*="PUNTO CRÍTICO"]:hover {
+    background-color: var(--dorado-hover) !important;
+    border-color: var(--dorado-hover) !important;
+    box-shadow: 0 0 12px var(--glow-gold) !important;
+    transform: translateY(-1px);
+}
+
+section[data-testid="stSidebar"] button[aria-label*="Inicio"]:hover *,
+section[data-testid="stSidebar"] button[aria-label*="Mapa General"]:hover *,
+section[data-testid="stSidebar"] button[aria-label*="Emergencia"]:not([aria-label*="•"]):not([aria-label*="[Activa]"]):hover *,
+section[data-testid="stSidebar"] button[aria-label*="Punto Crítico"]:hover *,
+section[data-testid="stSidebar"] button[aria-label*="PUNTO CRÍTICO"]:hover * {
+    color: var(--azul-noche) !important;
+}
+
+/* LISTADO DE EMERGENCIAS ACTIVAS */
+section[data-testid="stSidebar"] .stButton>button[aria-label*="•"] {
+    background-color: var(--tarjeta-oscura) !important;
+    border: 1px solid var(--border-subtle) !important;
+    color: var(--blanco) !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[aria-label*="•"] * {
+    color: var(--blanco) !important;
+    font-weight: 600 !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[aria-label*="•"]:hover,
+section[data-testid="stSidebar"] .stButton>button[aria-label*="•"]:hover * {
+    border-color: var(--azul-cielo) !important;
+    color: var(--azul-cielo) !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[aria-label*="[Activa]"] {
+    background-color: rgba(50, 197, 255, 0.15) !important;
+    border: 2px solid var(--azul-cielo) !important;
+    color: var(--azul-cielo) !important;
+    box-shadow: 0 0 12px var(--glow-cyan) !important;
+}
+
+section[data-testid="stSidebar"] .stButton>button[aria-label*="[Activa]"] * {
+    color: var(--azul-cielo) !important;
+    font-weight: 800 !important;
+}

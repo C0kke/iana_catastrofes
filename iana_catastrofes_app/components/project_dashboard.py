@@ -124,30 +124,33 @@ def render_project_dashboard():
     if st.session_state.get("show_edit_project_dialog", False):
         render_edit_project_dialog(project)
 
-    # Header de la Emergencia con botones de acción persistentes
-    col_h1, col_h2, col_h3, col_h4 = st.columns([2.2, 1.4, 1.0, 1.0])
-    with col_h1:
-        status_badge = "[TRATADA / SOLUCIONADA]" if status in ["tratada", "solucionada"] else "[EMERGENCIA ACTIVA]"
-        badge_bg = "#16a34a" if status in ["tratada", "solucionada"] else "#0284c7"
+    # HEADER DE LA EMERGENCIA 
+    col_info, col_actions = st.columns([2.7, 1.0])
+
+    with col_info:
+        status_badge = "[ TRATADA / SOLUCIONADA ]" if status in ["tratada", "solucionada"] else "[ EMERGENCIA ACTIVA ]"
+        
         st.markdown(f"""
-            <div style="background-color: var(--card-bg); border-radius: 10px; padding: 1rem 1.2rem; border: 1px solid var(--card-border); margin-bottom: 0.8rem;">
-                <span style="background-color: {badge_bg}; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
-                    {status_badge}
-                </span>
-                <span style="background-color: #0284c7; color: #ffffff; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; margin-left: 8px;">
-                    ÍTEM: {project_category.upper()}
-                </span>
-                <h2 style="color: var(--blue-title); margin: 6px 0 0 0; font-size: 1.6rem; font-weight: 800;">{proj_name}</h2>
-                <p style="color: var(--text-primary); margin-top: 4px; font-size: 0.9rem;">
-                    Ubicación: <strong>{address}</strong> ({sector}), Comuna de <strong>{commune}</strong>, {region} | Turno #{shift_number}
+            <div style="background-color: var(--card-bg); border-radius: 12px; padding: 1.4rem; border: 1px solid var(--card-border); margin-bottom: 1rem;">
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin-bottom: 10px;">
+                    <span style="background-color: rgba(50, 197, 255, 0.12); color: var(--azul-cielo); border: 1px solid var(--azul-cielo); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">
+                        {status_badge}
+                    </span>
+                    <span style="background-color: rgba(255, 193, 7, 0.12); color: var(--dorado); border: 1px solid var(--dorado); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">
+                        ÍTEM: {project_category.upper()}
+                    </span>
+                </div>
+                <h2 style="color: var(--blue-title); margin: 6px 0 6px 0; font-size: 1.8rem; font-weight: 800;">{proj_name}</h2>
+                <p style="color: var(--text-primary); margin: 0; font-size: 0.95rem; line-height: 1.5;">
+                    Ubicación: <strong>{address}</strong> ({sector}), Comuna de <strong>{commune}</strong>, {region} | <strong>Turno #{shift_number}</strong>
+                    {f' | <small style="color: var(--text-secondary);">{chile_time_fmt}</small>' if chile_time_fmt else ''}
                 </p>
             </div>
         """, unsafe_allow_html=True)
 
-    render_compact_weather_widget(commune)
-
-    with col_h2:
-        if st.button("Ejecutar / Reevaluar Análisis", type="primary", width="stretch", help="Ejecuta o reevalúa inmediatamente la emergencia"):
+    with col_actions:
+        st.markdown("<div style='margin-top: 4px;'></div>", unsafe_allow_html=True)
+        if st.button("Ejecutar / Reevaluar", type="primary", width="stretch", help="Ejecuta o reevalúa inmediatamente la emergencia"):
             with st.spinner("Ejecutando evaluación..."):
                 try:
                     docs = list_project_documents(proj_id)
@@ -184,18 +187,15 @@ def render_project_dashboard():
                 except Exception as e:
                     st.error(f"Error en el análisis: {e}")
 
-    with col_h3:
         if not read_only:
             if st.button("Editar Emergencia", width="stretch"):
                 st.session_state["show_edit_project_dialog"] = True
                 st.rerun()
 
-    with col_h4:
-        if not read_only:
             if status == "activa":
                 if st.button("Marcar Solucionada", width="stretch"):
                     update_project_status(proj_id, "solucionada")
-                    st.success("¡Emergencia marcada como Solucionada y archivada!")
+                    st.success("¡Emergencia marcada como Solucionada!")
                     st.rerun()
             else:
                 if st.button("Reabrir Emergencia", width="stretch"):
@@ -203,29 +203,55 @@ def render_project_dashboard():
                     st.info("Emergencia reabierta como activa.")
                     st.rerun()
 
-    # Evaluación en Tiempo Real: Nivel de Afectación & Riesgo para las Personas
+    # EVALUACIÓN EN TIEMPO REAL
     st.markdown("### Evaluación en Tiempo Real de la Emergencia")
+
+    sev_upper = alert_level.upper()
+    if "CRÍTICA" in sev_upper or "CRITICA" in sev_upper or "INMINENTE" in sev_upper or real_affectation in ["Crítica", "Critica"] or real_risk == "Riesgo Inminente":
+        det_color = "#FF4B4B"
+        det_bg = "rgba(255, 75, 75, 0.15)"
+    elif "ALTA" in sev_upper or "ALTO" in sev_upper or real_affectation == "Alta" or real_risk == "Riesgo Alto":
+        det_color = "#FFA726"
+        det_bg = "rgba(255, 167, 38, 0.15)"
+    elif "MEDIA" in sev_upper or "MEDIO" in sev_upper or real_affectation == "Media" or real_risk == "Riesgo Medio":
+        det_color = "#FFC107"
+        det_bg = "rgba(255, 193, 7, 0.15)"
+    else:
+        det_color = "#32C5FF"
+        det_bg = "rgba(50, 197, 255, 0.15)"
+
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(f"**NIVEL DE AFECTACIÓN REAL:**")
-        color_af = "#dc2626" if real_affectation in ["Crítica", "Critica"] else ("#d97706" if real_affectation == "Alta" else ("#eab308" if real_affectation == "Media" else "#16a34a"))
+        color_af = "#FF4B4B" if real_affectation in ["Crítica", "Critica"] else ("#FFA726" if real_affectation == "Alta" else ("#FFC107" if real_affectation == "Media" else "#32C5FF"))
         st.markdown(f"<h3 style='color: {color_af}; margin: 0; font-weight: 800;'>{real_affectation}</h3>", unsafe_allow_html=True)
         st.caption(f"Inicial declarado: {initial_affectation}")
 
     with col2:
         st.markdown(f"**RIESGO REAL A PERSONAS:**")
-        color_ri = "#dc2626" if real_risk == "Riesgo Inminente" else ("#d97706" if real_risk == "Riesgo Alto" else ("#eab308" if real_risk == "Riesgo Medio" else "#16a34a"))
+        color_ri = "#FF4B4B" if real_risk == "Riesgo Inminente" else ("#FFA726" if real_risk == "Riesgo Alto" else ("#FFC107" if real_risk == "Riesgo Medio" else "#32C5FF"))
         st.markdown(f"<h3 style='color: {color_ri}; margin: 0; font-weight: 800;'>{real_risk}</h3>", unsafe_allow_html=True)
         st.caption(f"Inicial declarado: {initial_risk}")
 
     with col3:
         st.markdown(f"**DETERMINACIÓN GLOBAL:**")
-        st.markdown(f"<div style='background-color: var(--card-bg); border: 1px solid var(--card-border); padding: 10px; border-radius: 6px; font-weight: bold; color: var(--blue-title); text-align: center;'>{alert_level}</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div style="background-color: {det_bg}; border: 1px solid {det_color}; padding: 10px; border-radius: 8px; font-weight: 800; color: {det_color}; text-align: center; font-size: 0.95rem; text-transform: uppercase;">
+                {alert_level}
+            </div>
+        """, unsafe_allow_html=True)
 
     if risk_eval:
-        st.info(f"**Análisis Comparativo del Riesgo:** {risk_eval}")
+        st.markdown(f"""
+            <div style="background-color: {det_bg}; border-left: 5px solid {det_color}; border: 1px solid {det_color}; border-left-width: 5px; border-radius: 8px; padding: 12px 18px; margin-top: 10px;">
+                <strong style="color: {det_color}; font-size: 1rem;">Análisis Comparativo del Riesgo:</strong>
+                <div style="color: #E2E8F0; font-size: 0.92rem; margin-top: 4px;">{risk_eval}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
-    # Pestañas Principales
+    st.markdown("<br/>", unsafe_allow_html=True)
+
+    # PESTAÑAS PRINCIPALES
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Ficha de Emergencia",
         "Resumen & Entidades a Derivar",
@@ -302,8 +328,8 @@ def render_project_dashboard():
 
         if recommendations:
             st.markdown("#### Recomendaciones Operativas para la Respuesta Municipal")
-            for r in recommendations:
-                st.markdown(f"1. {r}")
+            for idx, r in enumerate(recommendations, 1):
+                st.markdown(f"**{idx}.** {r}")
 
         if metadata:
             st.markdown("---")
@@ -440,3 +466,7 @@ def render_project_dashboard():
                         <br/><small style="color: var(--text-secondary);">Cargado en: {d.get('uploaded_at')}</small>
                     </div>
                 """, unsafe_allow_html=True)
+
+    st.markdown("<br/>", unsafe_allow_html=True)
+    st.divider()
+    render_compact_weather_widget(commune)

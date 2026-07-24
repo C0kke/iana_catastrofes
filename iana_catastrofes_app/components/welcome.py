@@ -110,7 +110,7 @@ def render_welcome_page():
         else:
             for r in resolved_list:
                 with st.expander(f"[Resuelta] {r.get('name', 'Emergencia')} - Comuna: {r.get('commune', 'N/A')} ({r.get('chile_time', '')})"):
-                    st.write(f"**Categoría:** `{r.get('project_category', 'Infraestructura')}`")
+                    st.markdown(f"**Categoría:** <span style='color: var(--azul-cielo); font-weight: 700;'>{r.get('project_category', 'Infraestructura')}</span>", unsafe_allow_html=True)
                     st.write(f"**Dirección:** {r.get('address', '')}")
                     st.write(f"**Sector:** {r.get('sector', '')}")
                     st.write(f"**Turno:** {r.get('shift_number', '1')}")

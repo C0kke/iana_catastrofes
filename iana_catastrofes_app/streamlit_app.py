@@ -37,7 +37,30 @@ except ModuleNotFoundError:
         from components.project_dashboard import render_project_dashboard
         from components.dialogs import render_new_project_dialog, render_new_critical_point_dialog, render_edit_critical_point_dialog
 
-INDEX_CSS_PATH = os.path.join(BASE_DIR, "index.css")
+def load_app_styles(base_dir: str):
+    styles_dir = os.path.join(base_dir, "styles")
+    combined_css = []
+    load_order = ["variables.css", "global.css", "components.css", "sidebar.css", "tabs.css", "login.css"]
+    
+    if os.path.exists(styles_dir):
+        for fname in load_order:
+            fpath = os.path.join(styles_dir, fname)
+            if os.path.exists(fpath):
+                with open(fpath, "r", encoding="utf-8") as f:
+                    combined_css.append(f.read())
+        for fname in sorted(os.listdir(styles_dir)):
+            if fname.endswith(".css") and fname not in load_order:
+                fpath = os.path.join(styles_dir, fname)
+                with open(fpath, "r", encoding="utf-8") as f:
+                    combined_css.append(f.read())
+    else:
+        index_path = os.path.join(base_dir, "index.css")
+        if os.path.exists(index_path):
+            with open(index_path, "r", encoding="utf-8") as f:
+                combined_css.append(f.read())
+                
+    if combined_css:
+        st.markdown(f"<style>{' '.join(combined_css)}</style>", unsafe_allow_html=True)
 
 st.set_page_config(
     page_title=f"IANA - EMERGENCIA",
@@ -45,9 +68,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-if os.path.exists(INDEX_CSS_PATH):
-    with open(INDEX_CSS_PATH, "r", encoding="utf-8") as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+load_app_styles(BASE_DIR)
 
 DATA_DIR = os.path.join(BASE_DIR, "data")
 UPLOADS = os.path.join(DATA_DIR, "uploads")

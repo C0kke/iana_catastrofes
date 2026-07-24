@@ -286,7 +286,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                         critical_points=filtered_cp
                     )
                     st.session_state[f"commune_ai_eval_{selected_commune}"] = eval_res
-                    st.success("¡Análisis Comunal ejecutado exitosamente!")
+                    st.toast("¡Análisis Comunal ejecutado exitosamente!")
                 except Exception as e:
                     st.error(f"Error al ejecutar el análisis: {e}")
 
@@ -316,20 +316,20 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
     # 1.5 Renderizado del Análisis de IA Comunal si fue ejecutado
     ai_eval: Optional[Any] = st.session_state.get(f"commune_ai_eval_{selected_commune}")
     if ai_eval:
-        st.markdown("---")
+        st.divider()
         st.markdown(f"#### Diagnóstico e Inteligencia Operativa -- **{selected_commune.upper()}**")
         
         alert_lvl = getattr(ai_eval, "communal_alert_level", "ALTA - ALERTA MÚLTIPLE")
-        alert_bg = "#dc2626" if "CRÍTICA" in alert_lvl.upper() else ("#d97706" if "ALTA" in alert_lvl.upper() else "#0284c7")
+        alert_bg = "var(--rojo-alerta)" if "CRÍTICA" in alert_lvl.upper() else ("var(--naranja-alto)" if "ALTA" in alert_lvl.upper() else "var(--azul-cielo)")
         exec_sum = getattr(ai_eval, 'executive_summary', '')
         
         st.markdown(f"""
             <div style="background-color: var(--card-bg); border-left: 6px solid {alert_bg}; padding: 1.2rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 1rem;">
-                <span style="background-color: {alert_bg}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">
+                <span style="background-color: {alert_bg}; color: var(--azul-noche); padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">
                     NIVEL GLOBAL DE ALERTA: {alert_lvl}
                 </span>
                 <h4 style="color: var(--blue-title); margin: 12px 0 8px 0;">Resumen Ejecutivo de Diagnóstico Territorial</h4>
-                <p style="margin: 0; color: #334155; font-size: 0.95rem; line-height: 1.6;">{exec_sum}</p>
+                <p style="margin: 0; color: var(--gris-claro); font-size: 0.95rem; line-height: 1.6;">{exec_sum}</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -349,13 +349,13 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                     s_sum = s_dict.get("summary", "")
                     s_acts = s_dict.get("required_actions", [])
 
-                    badge_c = "#dc2626" if s_lvl in ["Crítica", "Critica"] else ("#d97706" if s_lvl == "Alta" else "#0284c7")
+                    badge_c = "var(--rojo-alerta)" if s_lvl in ["Crítica", "Critica"] else ("var(--naranja-alto)" if s_lvl == "Alta" else "var(--azul-cielo)")
                     
                     st.markdown(f"""
-                        <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 6px; padding: 1rem; margin-bottom: 0.8rem;">
+                        <div style="background-color: rgba(15, 31, 46, 0.6); border: 1px solid var(--card-border); border-radius: 6px; padding: 1rem; margin-bottom: 0.8rem;">
                             <span style="color: {badge_c}; font-weight: bold; float: right; font-size: 0.85rem;">AFECTACIÓN: {s_lvl.upper()}</span>
                             <strong style="font-size: 1.05rem; color: var(--blue-title);">{s_name}</strong>
-                            <p style="margin: 8px 0 6px 0; font-size: 0.92rem; color: #334155;">{s_sum}</p>
+                            <p style="margin: 8px 0 6px 0; font-size: 0.92rem; color: var(--gris-claro);">{s_sum}</p>
                         </div>
                     """, unsafe_allow_html=True)
                     if s_acts:
@@ -379,7 +379,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             st.markdown("**Observaciones de Cumplimiento Legal (SINAPRED & Decreto 104):**")
             st.info(norm_notes if norm_notes else "La situación cumple con los parámetros generales de la Ley N° 21.364.")
 
-    st.markdown("---")
+    st.divider()
 
     # 2. Fila 1 de Gráficos: Categoría, Servicios y Riesgo para las Personas
     st.markdown("#### Distribución de Afectación por Categoría y Servicios Básicos")
@@ -399,7 +399,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             title="Categoría de Emergencia",
             color_discrete_sequence=px.colors.qualitative.Set2,
             hole=0.4,
-            template="plotly_white"
+            template="plotly_dark"
         )
         fig_pie1.update_layout(
             margin=dict(t=40, b=0, l=0, r=0),
@@ -407,7 +407,9 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             height=280,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#0f172a")
+            font=dict(color="#E2E8F0", family="Montserrat, sans-serif"),
+            legend=dict(font=dict(color="#E2E8F0")),
+            title=dict(font=dict(color="#E2E8F0", size=13))
         )
         st.plotly_chart(fig_pie1, width="stretch")
 
@@ -431,7 +433,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 title="Servicios Afectados",
                 color_discrete_sequence=px.colors.sequential.Teal,
                 hole=0.4,
-                template="plotly_white"
+                template="plotly_dark"
             )
             fig_pie2.update_layout(
                 margin=dict(t=40, b=0, l=0, r=0),
@@ -439,7 +441,9 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 height=280,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#0f172a")
+                font=dict(color="#E2E8F0", family="Montserrat, sans-serif"),
+                legend=dict(font=dict(color="#E2E8F0")),
+                title=dict(font=dict(color="#E2E8F0", size=13))
             )
             st.plotly_chart(fig_pie2, width="stretch")
         else:
@@ -453,11 +457,11 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
 
         df_risk = pd.DataFrame(list(risk_counts.items()), columns=["Nivel de Riesgo", "Cantidad"])
         colors_map = {
-            "Riesgo Inminente": "#dc2626",
-            "Riesgo Alto": "#d97706",
-            "Riesgo Medio": "#eab308",
-            "Riesgo Bajo": "#16a34a",
-            "Sin riesgo": "#0284c7"
+            "Riesgo Inminente": "#FF4B4B",
+            "Riesgo Alto": "#FFA726",
+            "Riesgo Medio": "#FFC107",
+            "Riesgo Bajo": "#32C5FF",
+            "Sin riesgo": "#9AA5B1"
         }
         fig_pie3 = px.pie(
             df_risk,
@@ -467,7 +471,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             color="Nivel de Riesgo",
             color_discrete_map=colors_map,
             hole=0.4,
-            template="plotly_white"
+            template="plotly_dark"
         )
         fig_pie3.update_layout(
             margin=dict(t=40, b=0, l=0, r=0),
@@ -475,11 +479,13 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             height=280,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#0f172a")
+            font=dict(color="#E2E8F0", family="Montserrat, sans-serif"),
+            legend=dict(font=dict(color="#E2E8F0")),
+            title=dict(font=dict(color="#E2E8F0", size=13))
         )
         st.plotly_chart(fig_pie3, width="stretch")
 
-    st.markdown("---")
+    st.divider()
 
     # 3. Fila 2: Análisis Comparativo por Comuna y Demanda de Recursos
     st.markdown("#### Análisis Comparativo de Respuesta Municipal y Requerimiento de Maquinaria")
@@ -498,9 +504,9 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             x="Nivel de Afectación",
             y="Total Emergencias",
             color="Nivel de Afectación",
-            color_discrete_map={"Crítica": "#dc2626", "Critica": "#dc2626", "Alta": "#d97706", "Media": "#0284c7", "Baja": "#16a34a"},
+            color_discrete_map={"Crítica": "#FF4B4B", "Critica": "#FF4B4B", "Alta": "#FFA726", "Media": "#FFC107", "Baja": "#32C5FF"},
             text_auto=True,
-            template="plotly_white"
+            template="plotly_dark"
         )
         fig_bar.update_layout(
             margin=dict(t=20, b=0, l=0, r=0),
@@ -508,8 +514,10 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
             showlegend=False,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#0f172a")
+            font=dict(color="#E2E8F0", family="Montserrat, sans-serif")
         )
+        fig_bar.update_xaxes(color="#E2E8F0", gridcolor="#1D344B")
+        fig_bar.update_yaxes(color="#E2E8F0", gridcolor="#1D344B")
         st.plotly_chart(fig_bar, width="stretch")
 
     with b2:
@@ -531,22 +539,24 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
                 x="Solicitudes",
                 y="Recurso Requerido",
                 orientation="h",
-                color_discrete_sequence=["#0284c7"],
+                color_discrete_sequence=["#32C5FF"],
                 text_auto=True,
-                template="plotly_white"
+                template="plotly_dark"
             )
             fig_req.update_layout(
                 margin=dict(t=20, b=0, l=0, r=0),
                 height=300,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#0f172a")
+                font=dict(color="#E2E8F0", family="Montserrat, sans-serif")
             )
+            fig_req.update_xaxes(color="#E2E8F0", gridcolor="#1D344B")
+            fig_req.update_yaxes(color="#E2E8F0", gridcolor="#1D344B")
             st.plotly_chart(fig_req, width="stretch")
         else:
             st.info("Sin solicitudes de maquinaria registradas.")
 
-    st.markdown("---")
+    st.divider()
 
     # 4. Generación y Exportación de Informes Ejecutivos por Entidad en PDF
     # st.markdown("#### Generación y Exportación de Informes Ejecutivos en PDF")
@@ -599,8 +609,6 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
     #        width="stretch"
     #    )
 #
-    st.markdown("---")
-
     st.markdown("#### Matriz de Monitoreo por Comuna Afectada")
 
     for com_name in (communes_set if selected_commune == "Todas las Comunas Afectadas" else [selected_commune]):

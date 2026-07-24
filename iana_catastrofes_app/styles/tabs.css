@@ -1,0 +1,66 @@
+.stTabs [data-baseweb="tab-list"] {
+    gap: 12px !important;
+    background-color: transparent !important;
+    padding: 0px !important;
+    border-bottom: 2px solid var(--border-subtle) !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    background-color: transparent !important;
+    border: none !important;
+    color: var(--gris-acero) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    padding: 10px 16px !important;
+    transition: all 0.2s ease !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    color: var(--blanco) !important;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: transparent !important;
+    color: var(--azul-cielo) !important;
+    font-weight: 800 !important;
+    border-bottom: 3px solid var(--azul-cielo) !important;
+    text-shadow: 0 0 10px var(--glow-cyan);
+}
+
+.stTabs [data-baseweb="tab-highlight"],
+.stTabs [data-baseweb="tab-border"],
+.stTabs button[data-baseweb="tab-scroll-button"],
+.stTabs div[data-baseweb="tab-scroll-button"],
+.stTabs div[data-testid="stTabsScrollButton"],
+.stTabs button[aria-label*="Scroll"],
+.stTabs button[aria-label*="scroll"],
+.stTabs div[class*="Fade"],
+.stTabs div[class*="fade"],
+.stTabs [data-baseweb="tab-list"]>div {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.stTabs button[data-baseweb="tab-scroll-button"] svg,
+.stTabs div[data-baseweb="tab-scroll-button"] svg,
+.stTabs div[data-testid="stTabsScrollButton"] svg,
+.stTabs button[aria-label*="Scroll"] svg,
+.stTabs button[aria-label*="scroll"] svg,
+.stTabs [data-baseweb="tab-list"] button svg,
+.stTabs [data-baseweb="tab-list"] svg {
+    color: var(--azul-cielo) !important;
+    fill: var(--azul-cielo) !important;
+    stroke: var(--azul-cielo) !important;
+}
+
+.stTabs button[data-baseweb="tab-scroll-button"]:hover svg,
+.stTabs div[data-baseweb="tab-scroll-button"]:hover svg,
+.stTabs button[aria-label*="Scroll"]:hover svg {
+    color: var(--azul-cielo-hover) !important;
+    fill: var(--azul-cielo-hover) !important;
+    stroke: var(--azul-cielo-hover) !important;
+}

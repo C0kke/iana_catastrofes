@@ -80,44 +80,44 @@ def render_weather_monitoring_tab(default_commune: str = "Coquimbo"):
     date_d2 = (now_dt + timedelta(days=2)).strftime("%d/%m/%Y")
 
     st.markdown(f"""
-        <div style="background-color: var(--card-bg, #ffffff); border: 1px solid var(--card-border, #cbd5e1); border-radius: 10px; padding: 1.2rem; margin-bottom: 1.5rem; color: #000000;">
-            <div style="font-weight: 800; font-size: 1.15rem; color: #000000; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background-color: var(--card-bg, #0F1F2E); border: 1px solid var(--border-subtle, #1D344B); border-radius: 10px; padding: 1.2rem; margin-bottom: 1.5rem; color: #FFFFFF;">
+            <div style="font-weight: 800; font-size: 1.15rem; color: #FFFFFF; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center;">
                 <span>Pronóstico por Días - Comuna de {selected_commune}</span>
-                <span style="font-size: 0.85rem; background-color: rgba(0, 0, 0, 0.05); color: #000000; padding: 4px 12px; border-radius: 12px; border: 1px solid #cbd5e1;">
+                <span style="font-size: 0.85rem; background-color: rgba(50, 197, 255, 0.12); color: var(--azul-cielo, #32C5FF); padding: 4px 12px; border-radius: 12px; border: 1px solid var(--azul-cielo, #32C5FF); font-weight: 600;">
                     Isoterma 0°C: {isotherm} m.s.n.m. | Ayer (-24h): {past_rain} mm
                 </span>
             </div>
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; color: #000000;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; color: #FFFFFF;">
                 <thead>
-                    <tr style="border-bottom: 2px solid #cbd5e1; color: #000000; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; font-weight: bold;">
-                        <th style="padding: 10px 14px; color: #000000;">Fecha / Día</th>
-                        <th style="padding: 10px 14px; color: #000000;">Temperatura (°C)</th>
-                        <th style="padding: 10px 14px; color: #000000;">Viento Máx. Esperado</th>
-                        <th style="padding: 10px 14px; color: #000000;">Precipitación Esperada</th>
-                        <th style="padding: 10px 14px; color: #000000;">Estado Proyectado</th>
+                    <tr style="border-bottom: 2px solid var(--border-subtle, #1D344B); color: #32C5FF; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; font-weight: bold;">
+                        <th style="padding: 10px 14px; color: #32C5FF;">Fecha / Día</th>
+                        <th style="padding: 10px 14px; color: #32C5FF;">Temperatura (°C)</th>
+                        <th style="padding: 10px 14px; color: #32C5FF;">Viento Máx. Esperado</th>
+                        <th style="padding: 10px 14px; color: #32C5FF;">Precipitación Esperada</th>
+                        <th style="padding: 10px 14px; color: #32C5FF;">Estado Proyectado</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom: 1px solid #e2e8f0; background-color: rgba(56, 189, 248, 0.12);">
-                        <td style="padding: 12px 14px; font-weight: bold; color: #000000;">{date_d0} (Hoy)</td>
-                        <td style="padding: 12px 14px; color: #000000;">{t0_str}</td>
-                        <td style="padding: 12px 14px; color: #000000; font-weight: 600;">{w0_val} km/h</td>
-                        <td style="padding: 12px 14px; color: #000000; font-weight: bold;">{today_rain:.1f} mm</td>
-                        <td style="padding: 12px 14px; color: #000000; font-weight: 600;">{cur.get('condition', 'Temporal Activo')}</td>
+                    <tr style="border-bottom: 1px solid var(--border-subtle, #1D344B); background-color: rgba(50, 197, 255, 0.1);">
+                        <td style="padding: 12px 14px; font-weight: bold; color: #FFFFFF;">{date_d0} (Hoy)</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">{t0_str}</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0; font-weight: 600;">{w0_val} km/h</td>
+                        <td style="padding: 12px 14px; color: #32C5FF; font-weight: bold;">{today_rain:.1f} mm</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0; font-weight: 600;">{cur.get('condition', 'Temporal Activo')}</td>
                     </tr>
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 12px 14px; font-weight: bold; color: #000000;">{date_d1}</td>
-                        <td style="padding: 12px 14px; color: #000000;">{t1_str}</td>
-                        <td style="padding: 12px 14px; color: #000000;">{w1_val} km/h</td>
-                        <td style="padding: 12px 14px; color: #000000; font-weight: bold;">{day1_rain:.1f} mm</td>
-                        <td style="padding: 12px 14px; color: #000000;">Precipitación / Chubascos</td>
+                    <tr style="border-bottom: 1px solid var(--border-subtle, #1D344B);">
+                        <td style="padding: 12px 14px; font-weight: bold; color: #FFFFFF;">{date_d1}</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">{t1_str}</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">{w1_val} km/h</td>
+                        <td style="padding: 12px 14px; color: #32C5FF; font-weight: bold;">{day1_rain:.1f} mm</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">Precipitación / Chubascos</td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 14px; font-weight: bold; color: #000000;">{date_d2}</td>
-                        <td style="padding: 12px 14px; color: #000000;">{t2_str}</td>
-                        <td style="padding: 12px 14px; color: #000000;">{w2_val} km/h</td>
-                        <td style="padding: 12px 14px; color: #000000; font-weight: bold;">{day2_rain:.1f} mm</td>
-                        <td style="padding: 12px 14px; color: #000000;">Declinando / Parcial</td>
+                        <td style="padding: 12px 14px; font-weight: bold; color: #FFFFFF;">{date_d2}</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">{t2_str}</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">{w2_val} km/h</td>
+                        <td style="padding: 12px 14px; color: #32C5FF; font-weight: bold;">{day2_rain:.1f} mm</td>
+                        <td style="padding: 12px 14px; color: #E2E8F0;">Declinando / Parcial</td>
                     </tr>
                 </tbody>
             </table>
@@ -174,20 +174,23 @@ def render_weather_monitoring_tab(default_commune: str = "Coquimbo"):
         )
 
         fig.update_layout(
-            title=f"Evolución del Temporal (-12 Horas a +36 Horas) en {selected_commune}",
+            title=dict(
+                text=f"Evolución del Temporal (-12 Horas a +36 Horas) en {selected_commune}",
+                font=dict(color="#E2E8F0", size=14)
+            ),
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="top", y=-0.5, xanchor="center", x=0.5),
+            legend=dict(orientation="h", yanchor="top", y=-0.35, xanchor="center", x=0.5, font=dict(color="#E2E8F0")),
             margin=dict(t=50, b=80, l=10, r=10),
             height=400,
-            template="plotly_white",
+            template="plotly_dark",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#0f172a")
+            font=dict(color="#E2E8F0")
         )
 
-        fig.update_xaxes(title_text="Fecha / Hora", showgrid=False)
-        fig.update_yaxes(title_text="Precipitación (mm/h)", secondary_y=False, showgrid=True, gridcolor="#e2e8f0")
-        fig.update_yaxes(title_text="Viento (km/h) / Temp (°C)", secondary_y=True, showgrid=False)
+        fig.update_xaxes(title_text="Fecha / Hora", showgrid=False, color="#E2E8F0")
+        fig.update_yaxes(title_text="Precipitación (mm/h)", secondary_y=False, showgrid=True, gridcolor="#1D344B", color="#E2E8F0")
+        fig.update_yaxes(title_text="Viento (km/h) / Temp (°C)", secondary_y=True, showgrid=False, color="#E2E8F0")
 
 
         st.plotly_chart(fig, width="stretch")

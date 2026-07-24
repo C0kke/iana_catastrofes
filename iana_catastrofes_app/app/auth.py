@@ -68,9 +68,8 @@ def logout_user():
     st.rerun()
 
 def render_login_screen():
-    """Renderiza la pantalla de inicio de sesión estilizada."""
     st.markdown("""
-        <div style="max-width: 440px; margin: 4rem auto 2rem auto; background-color: var(--card-bg); border-radius: 12px; padding: 2.2rem; border: 1px solid var(--card-border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <div style="max-width: 440px; min-width: 400px; margin: 4rem auto 2rem auto; background-color: var(--app-bg); border-radius: 12px; padding: 2.2rem; border: 1px solid var(--card-border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
             <h2 style="color: var(--blue-title); margin-top: 0; font-size: 1.8rem; font-weight: 800;">IANA - EMERGENCIA</h2>
             <p style="color: var(--text-primary); font-size: 0.95rem; margin-bottom: 1.5rem;">
                 Sistema de Control y Monitoreo Municipal en Tiempo Real

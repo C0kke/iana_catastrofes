@@ -1,0 +1,41 @@
+:root {
+    --azul-noche: #0B1320;
+    --azul-petroleo: #0F1F2E;
+    --azul-cielo: #32C5FF;
+    --azul-cielo-hover: #56D4FF;
+    --dorado: #FFC107;
+    --dorado-hover: #FFD043;
+    --gris-acero: #9AA5B1;
+    --gris-claro: #E2E8F0;
+    --blanco: #FFFFFF;
+    --rojo-alerta: #FF4D4D;
+    --naranja-alto: #FFA726;
+    --tarjeta-oscura: #0B1624;
+
+    --border-subtle: #1D344B;
+    --border-highlight: #000000;
+    --border-warning: #FFC107;
+    --glow-cyan: rgba(50, 197, 255, 0.25);
+    --glow-gold: rgba(255, 193, 7, 0.25);
+
+    /* Mapeos Globales */
+    --app-bg: var(--azul-noche);
+    --card-bg: var(--azul-petroleo);
+    --card-border: var(--border-subtle);
+    --card-border-active: var(--azul-cielo);
+    --text-primary: var(--blanco);
+    --text-secondary: var(--gris-acero);
+    --blue-title: var(--azul-cielo);
+    --blue-accent: var(--azul-cielo);
+    --gold-accent: var(--dorado);
+
+    /* Tipografías */
+    --font-heading: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* Dimensiones */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-pill: 20px;
+}
