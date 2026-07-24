@@ -81,10 +81,9 @@ def generate_pdf_report(entity_key: str, commune_filter: str, projects: list, cr
         pdf.set_font('Helvetica', '', 9.5)
         pdf.set_text_color(51, 65, 85)
         
-        road_cuts = [cp for cp in act_cp if cp.get("point_type") in ["ruta_cortada", "socavon", "derrumbe"]]
+        road_cuts = [cp for cp in act_cp if cp.get("point_type") in ["ruta_cortada", "interrupción de conectividad", "interrupcion de conectividad", "remoción en masa", "remocion en masa", "socavon", "derrumbe"]]
         mop_projects = [p for p in act_p if p.get("project_category") in ["Caminos y Carreteras", "Puentes", "Grandes Ítems"] or p.get("project_type") in ["socavon", "derrumbe", "remocion_masa", "dano_pavimento"]]
         isolation_level = "SEVERO / CONEXIÓN IMPOSIBLE" if len(road_cuts) >= 2 else ("RESTRINGIDO / SOLO 4X4" if len(road_cuts) == 1 else "CONTROLADO")
-        
         desc = (
             f"Puntos Críticos Viales y Rutas Cortadas: {len(road_cuts)} eventos de alta severidad.\n"
             f"Emergencias Registradas en Carreteras/Vías: {len(mop_projects)} casos activos.\n"

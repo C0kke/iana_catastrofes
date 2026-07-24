@@ -46,8 +46,10 @@ except ModuleNotFoundError:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INFORME_ALFA_PATH = os.path.join(BASE_DIR, "knowledge", "informe_alfa.json")
 DECRETO104_PATH = os.path.join(BASE_DIR, "knowledge", "Decreto104.md")
+LEY21364_PATH = os.path.join(BASE_DIR, "knowledge", "Ley21364.md")
 
 _DECRETO104_CACHE: Optional[str] = None
+_LEY21364_CACHE: Optional[str] = None
 
 def load_decreto104_summary() -> str:
     """Carga el texto y disposiciones del Decreto Supremo N° 104 (Ley N° 16.282)."""
@@ -65,15 +67,41 @@ def load_decreto104_summary() -> str:
 
     _DECRETO104_CACHE = """
     DECRETO SUPREMO N° 104 (LEY N° 16.282) - NORMATIVA CHILENA PARA CASOS DE SISMOS Y CATASTROFES:
-    - Art. 1°: Declaración de Zonas Afectadas / Catástrofe por el Presidente de la República.
+    - Art. 1°: Declaración de Zonas Afectadas / Catástrofe por el Presidente de la República. Requiere sismos o catástrofes con daños de consideración masivos comprobados.
     - Art. 2°: Clasificación de Damnificados y derecho preferente a traslado, alojamiento y asistencia.
     - Art. 3°: Medidas de Excepción Administrativa y Contratación Directa de Excepción (Art. 3°b) para compras/obras de emergencia.
     - Art. 5°: Sanción de presidio a acaparamiento, venta a sobreprecio o especulación de alimentos, materiales y medicamentos en zonas afectadas.
     - Art. 6°-7°: Exención de tributos y aduanas para donaciones de ayuda nacional e internacional.
     - Art. 25°-26°: Exenciones técnicas MINVU/Municipal para demolición, reparación y reconstrucción de viviendas; supervigilancia por profesionales idóneos.
-    - Art. 27°: Aprobación expeditativa de Planes Reguladores Excepcionales para reconstrucción a solicitud municipal.
     """
     return _DECRETO104_CACHE
+
+def load_ley21364_summary() -> str:
+    """Carga las disposiciones del Sistema Nacional de Prevención y Respuesta ante Desastres (Ley N° 21.364 - SINAPRED / SENAPRED)."""
+    global _LEY21364_CACHE
+    if _LEY21364_CACHE:
+        return _LEY21364_CACHE
+
+    if os.path.exists(LEY21364_PATH):
+        try:
+            with open(LEY21364_PATH, "r", encoding="utf-8") as f:
+                _LEY21364_CACHE = f.read()
+                return _LEY21364_CACHE
+        except Exception as e:
+            print(f"Advertencia al leer Ley21364.md: {e}")
+
+    _LEY21364_CACHE = """
+    LEY N° 21.364 - SISTEMA NACIONAL DE PREVENCIÓN Y RESPUESTA ANTE DESASTRES (SINAPRED / SENAPRED):
+    - Art. 2°b (Definición de Emergencia): Evento o inminencia que altera el funcionamiento de una comunidad debido a una amenaza que ocasiona afectación real o pérdidas.
+      FILTRO CRÍTICO: Si NO hay amenaza inminente ni alteración comunitaria ni daños (ej. presencia preventiva de Bomberos, campamento en catastro habitual, partidos de fútbol o eventos masivos previstos), NO CONSTITUYE EMERGENCIA y NO activa los protocolos del SINAPRED ni la convocatoria a Comités COGRID.
+    - Art. 2°c (Niveles de Emergencia):
+      1. Emergencia Menor: Nivel comunal (gestionada con recursos municipales).
+      2. Emergencia Mayor: Nivel provincial/regional (requiere apoyo del COGRID regional).
+      3. Desastre: Nivel nacional (excede la capacidad regional).
+      4. Catástrofe: Nivel nacional con asistencia internacional.
+    - Art. 4°f (Principio de Escalabilidad): Movilización gradual y escalonada de capacidades (Comunal -> Provincial -> Regional -> Nacional).
+    """
+    return _LEY21364_CACHE
 
 SEISMIC_KEYWORDS = [
     "sismo", "terremoto", "temblor", "sismico", "sísmico", "replica", "réplica",
@@ -316,27 +344,38 @@ def analyze_single_document(
   "extracted_metadata": [{"key": "string", "value": "string"}]
 }'''
 
-    # Verificar si es una emergencia sísmica / terremoto
+    # Cargar Marco Legal (Ley N° 21.364 SINAPRED y Decreto N° 104)
+    ley21364_text = load_ley21364_summary()
     seismic_active = is_seismic_emergency(project_data, file_content_text)
-    decreto_section = ""
+    
+    legal_section = f"""
+--- MARCO LEGAL CHILENO OBLIGATORIO: LEY N° 21.364 (SINAPRED / SENAPRED) ---
+{ley21364_text}
+
+INSTRUCCIÓN DE FILTRADO Y VALIDACIÓN DE EVENTO (LEY 21.364):
+1. Contrasta si el evento constituye una EMERGENCIA REAL según el Art. 2b de la Ley 21.364.
+2. Si el registro o archivo corresponde a una ACTIVIDAD REGULAR / NO EMERGENTE (ej. partido de fútbol, desfile, evento masivo regulado, presencia o llegada preventiva de Bomberos sin siniestro, campamento en catastro habitual sin siniestro):
+   - Clasifica obligatoriamente 'detected_affectation_level' = 'Baja' y 'detected_people_risk' = 'Sin riesgo'.
+   - En 'document_summary' indica explícitamente que la situación es un evento regular o preventivo y NO activa los protocolos del SINAPRED ni COGRID.
+"""
+
     if seismic_active:
         decreto_text = load_decreto104_summary()
-        decreto_section = f"""
---- CONOCIMIENTO NORMATIVO CHILENO: DECRETO SUPREMO N° 104 (LEY N° 16.282) ---
-Esta emergencia involucra un evento SÍSMICO / TERREMOTO en Chile.
-Debes consultar y aplicar estrictamente el siguiente contexto normativo chileno para evaluar el caso:
+        legal_section += f"""
+--- CONOCIMIENTO Y EVALUACIÓN SÍSMICA CRÍTICA: DECRETO SUPREMO N° 104 (LEY N° 16.282) ---
 {decreto_text}
 
-INSTRUCCIONES NORMATIVAS SÍSMICAS:
-1. Aplica la clasificación y priorización de damnificados según Art. 2°.
-2. Considera los mecanismos de Excepción Administrativa y Contratación Directa (Art. 3°b) para adquisición inmediata de insumos y servicios.
-3. Identifica riesgos de daños estructurales en edificación y exenciones técnicas MINVU/DOM (Art. 25° y 26°).
-4. Genera alertas de riesgo o infracción si detectas problemas de seguridad, acaparamiento o colapso de servicios clave.
+CRITERIO RÍGIDO SOBRE SISMOS / TERREMOTOS:
+- NO solicites ni sugieras declarar "Zona de Catástrofe" (Decreto 104) si la magnitud del sismo es desconocida (ej. puede tratarse de un temblor menor de 3.2 MW) o si no hay antecedentes de colapsos estructurales graves.
+- Si no hay certeza de alta magnitud o de destrucción masiva, en las recomendaciones DEBES REQUERIR:
+  1) Informe oficial del Centro Sismológico Nacional (CSN) con magnitud y epicentro exacto.
+  2) Despliegue inmediato de inspección técnica estructural EDAN / Dirección de Obras Municipales (DOM) en terreno para evaluar si existen daños reales antes de cualquier escalamiento.
+- Solo si se confirma magnitud elevada (>= 6.5) o destrucción estructural masiva, se justifica recomendar la activación de Zona de Catástrofe.
 """
 
     prompt_text = f"""Eres un Evaluador Senior de Emergencias Municipales de la Región de Coquimbo, Chile.
 Analiza la evidencia ingresada (Tipo declarado: {document_type}) bajo el contexto operativo de la emergencia.
-{decreto_section}
+{legal_section}
 --- DATOS REGISTRADOS DE ESTA EMERGENCIA ---
 {emergency_context}
 
@@ -408,25 +447,37 @@ def consolidate_accident_evaluation(
 
     emergency_context = build_project_context(project_data)
 
+    ley21364_text = load_ley21364_summary()
     seismic_active = is_seismic_emergency(project_data, new_doc_summary + " " + previous_context)
-    decreto_section = ""
+    
+    legal_section = f"""
+    --- MARCO LEGAL VIGENTE: LEY N° 21.364 (SINAPRED / SENAPRED) ---
+    {ley21364_text}
+
+    EVALUACIÓN DE ESTADO DEL EVENTO (LEY 21.364):
+    - Contrasta si la situación constituye o no una emergencia real. Si se trata de un evento deportivo (partido de fútbol), desfile, llegada/patrullaje preventivo de Bomberos sin siniestro, o campamento en catastro de rutina sin siniestro:
+      * Suministra 'real_affectation_level' = 'Baja', 'real_people_risk' = 'Sin riesgo' y 'overall_alert_level' = 'BAJA - SIN RIESGO'.
+      * En las recomendaciones aclara explícitamente que NO corresponde activar Comités COGRID ni los protocolos de emergencia del SINAPRED.
+"""
+
     if seismic_active:
         decreto_text = load_decreto104_summary()
-        decreto_section = f"""
-    --- MARCO LEGAL Y REGULATORIO CHILENO: DECRETO SUPREMO N° 104 (LEY N° 16.282) ---
-    Esta emergencia involucra eventos de origen SÍSMICO / TERREMOTOS en Chile.
-    Aplica obligatoriamente el siguiente marco normativo en tu análisis y recomendaciones:
+        legal_section += f"""
+    --- EVALUACIÓN CRÍTICA DE SISMOS Y TERREMOTOS (DECRETO SUPREMO N° 104 & LEY 21.364) ---
     {decreto_text}
 
-    INSTRUCCIONES DE ACCIÓN BAJO DECRETO 104:
-    1. Recomienda la declaración de Zona de Catástrofe (Art. 1°) y la activación de Contratación Directa de Excepción (Art. 3°b) para obras y compras urgentes.
-    2. En 'mitigation_actions' y 'action_recommendations', incluye la inspección y supervigilancia técnica de edificaciones según Art. 25°-26° (MINVU/DOM).
-    3. Establece la priorización de damnificados (Art. 2°) y la coordinación municipal de albergues, ayuda humanitaria y donaciones exentas (Art. 6°-7°).
+    INSTRUCCIONES RÍGIDAS SOBRE SISMOS / TERREMOTOS:
+    - Evalúa la magnitud informada. Si la magnitud es DESCONOCIDA (ej. puede tratarse de un temblor menor de 3.2 MW) o no hay antecedentes constatados de colapsos estructurales graves:
+      * ESTÁ ESTRICTAMENTE PROHIBIDO solicitar o recomendar "Zona de Catástrofe" bajo el Decreto 104.
+      * En 'mitigation_actions' y 'action_recommendations', DEBES REQUERIR OBLIGATORIAMENTE:
+        1) Confirmación e informe oficial al Centro Sismológico Nacional (CSN) de la magnitud y profundidad.
+        2) Catastro de terreno de emergencia (EDAN) y evaluación estructural por la Dirección de Obras Municipales (DOM) para verificar daños reales.
+    - Únicamente si se confirma una magnitud elevada (>= 6.5) o destrucción masiva comprobada, se justificará evaluar solicitar Zona de Catástrofe (Decreto 104) y COGRID Regional/Nacional (Ley 21.364).
 """
 
     prompt = f"""
     Eres el Comandante Operativo de la Dirección de Gestión del Riesgo de Desastres de la Municipalidad de Coquimbo.
-    {decreto_section}
+    {legal_section}
     Debes evaluar la emergencia y especificar exactamente CUÁLES DE LAS SIGUIENTES OFICINAS Y ESPECIALISTAS INTERVIENEN:
     - **Social**: Para damnificados, albergues, entregas de nylon/cajas de alimentos y contención social (DIDECO).
     - **Infraestructura**: Para reparación de obras municipales, contención de taludes, escombros y maquinaria pesada (Obras Municipales).
