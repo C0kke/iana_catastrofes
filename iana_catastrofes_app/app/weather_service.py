@@ -30,14 +30,22 @@ COQUIMBO_COMMUNES_COORDS = {
 
 DMC_PUBLIC_AVISOS_URL = "https://servicios.meteochile.gob.cl/api/v1/servicios/avisos"
 
+_DMC_ALERTS_CACHE: Optional[List[Dict[str, Any]]] = None
+_DMC_CACHE_TIMESTAMP: Optional[datetime] = None
+
 def fetch_dmc_official_alerts() -> List[Dict[str, Any]]:
-    """Consulta los avisos y alertas oficiales vigentes en la Dirección Meteorológica de Chile (DMC)."""
+    global _DMC_ALERTS_CACHE, _DMC_CACHE_TIMESTAMP
+
+    now = datetime.now()
+    if _DMC_ALERTS_CACHE is not None and _DMC_CACHE_TIMESTAMP is not None:
+        if (now - _DMC_CACHE_TIMESTAMP).total_seconds() < 1500:
+            return _DMC_ALERTS_CACHE
+
     alerts = []
     try:
-        resp = requests.get(DMC_PUBLIC_AVISOS_URL, timeout=4)
+        resp = requests.get(DMC_PUBLIC_AVISOS_URL, timeout=3)
         if resp.status_code == 200:
             data = resp.json()
-            # Filtrar avisos para la Región de Coquimbo (Región IV)
             items = data if isinstance(data, list) else data.get("datos", data.get("avisos", []))
             for item in items:
                 reg = str(item.get("region", "")).lower()
@@ -52,16 +60,20 @@ def fetch_dmc_official_alerts() -> List[Dict[str, Any]]:
                         "start_time": item.get("inicio", ""),
                         "end_time": item.get("fin", "")
                     })
-    except Exception as e:
-        print(f"[DMC API Warning] No se pudo obtener alertas de DMC: {e}")
-    return alerts
+            _DMC_ALERTS_CACHE = alerts
+            _DMC_CACHE_TIMESTAMP = now
+            return alerts
+    except Exception:
+        pass
+
+    _DMC_ALERTS_CACHE = []
+    _DMC_CACHE_TIMESTAMP = now
+    return []
 
 def fetch_openweather_onecall(lat: float, lon: float) -> Optional[Dict[str, Any]]:
-    """Consulta la API 3.0 / 2.5 de OpenWeather para la ubicación especificada."""
     if not OPENWEATHER_API_KEY:
         return None
 
-    # Intentar One Call 3.0
     url_3 = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=es"
     try:
         resp = requests.get(url_3, timeout=5)
@@ -70,7 +82,6 @@ def fetch_openweather_onecall(lat: float, lon: float) -> Optional[Dict[str, Any]
     except Exception as e:
         print(f"[OpenWeather 3.0 Warning] {e}")
 
-    # Fallback a OpenWeather 2.5 Forecast + Weather si 3.0 no está activado
     try:
         url_25_current = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=es"
         url_25_forecast = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric&lang=es"
@@ -80,7 +91,6 @@ def fetch_openweather_onecall(lat: float, lon: float) -> Optional[Dict[str, Any]
             c_data = r_c.json()
             f_data = r_f.json()
             
-            # Construir objeto tipo OneCall simplificado
             hourly_list = []
             for item in f_data.get("list", []):
                 hourly_list.append({
@@ -122,22 +132,18 @@ def fetch_openweather_timemachine(lat: float, lon: float, dt_timestamp: int) -> 
     return None
 
 def generate_synthetic_realistic_weather(commune: str) -> Dict[str, Any]:
-    """Genera datos meteorológicos realistas para Coquimbo cuando no hay conexión de API."""
     coords = COQUIMBO_COMMUNES_COORDS.get(commune, {"altitude_m": 100})
     alt = coords["altitude_m"]
 
-    # Diferenciar comunas costeras de valles e interior
     is_interior = alt > 300
     temp_base = 13.5 if not is_interior else 16.0
     rain_base = 12.4 if is_interior else 8.2
 
     now = datetime.now(CHILE_TZ)
     
-    # Timeline de -24h a +72h (96 horas)
     hourly = []
     for h in range(-24, 73):
         t = now + timedelta(hours=h)
-        # Simular curva de tormenta que alcanza su pico en h=6
         dist_from_peak = abs(h - 6)
         if dist_from_peak < 18:
             rain_h = max(0.0, round((18 - dist_from_peak) * (rain_base / 20.0), 1))
@@ -159,7 +165,6 @@ def generate_synthetic_realistic_weather(commune: str) -> Dict[str, Any]:
             "pop_percent": min(100, int(rain_h * 25)) if rain_h > 0 else 10
         })
 
-    # Totales por día
     past_24h_rain = round(sum(item["rain_mm"] for item in hourly if item["is_past"]), 1)
     today_rain = round(sum(item["rain_mm"] for item in hourly if 0 <= (datetime.fromtimestamp(item["dt"], tz=CHILE_TZ) - now).total_seconds() <= 86400), 1)
     day1_rain = round(sum(item["rain_mm"] for item in hourly if 86400 < (datetime.fromtimestamp(item["dt"], tz=CHILE_TZ) - now).total_seconds() <= 172800), 1)
@@ -200,7 +205,6 @@ def generate_synthetic_realistic_weather(commune: str) -> Dict[str, Any]:
 def get_extended_weather_report(commune: str) -> Dict[str, Any]:
     """Genera el reporte meteorológico unificado (-1d a +3d) para la comuna dada."""
     if commune not in COQUIMBO_COMMUNES_COORDS:
-        # Fallback a Coquimbo si no coincide
         commune = "Coquimbo"
 
     coords = COQUIMBO_COMMUNES_COORDS[commune]

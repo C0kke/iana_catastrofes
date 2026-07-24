@@ -476,53 +476,65 @@ def render_new_critical_point_dialog():
         cur_lat = st.session_state.get("cp_new_lat")
         cur_lng = st.session_state.get("cp_new_lng")
 
+        # 1. Process GPS location request BEFORE widget creation
+        if st.session_state.get("request_gps_cp", False):
+            with st.spinner("Obteniendo coordenadas GPS..."):
+                location = get_geolocation()
+                if location:
+                    st.session_state["request_gps_cp"] = False
+                    if "error" in location:
+                        st.error(f"Error GPS: {location['error']['message']}")
+                    else:
+                        coords = location.get("coords", {})
+                        lat = coords.get("latitude")
+                        lng = coords.get("longitude")
+                        if lat is not None and lng is not None:
+                            r_lat = round(lat, 6)
+                            r_lng = round(lng, 6)
+                            st.session_state["cp_new_lat"] = r_lat
+                            st.session_state["cp_new_lng"] = r_lng
+                            st.session_state["cp_new_lat_input"] = str(r_lat)
+                            st.session_state["cp_new_lng_input"] = str(r_lng)
+                            st.session_state["show_new_critical_point_dialog"] = True
+                            st.rerun()
+
+        # 2. Location picker map
         pick_lat, pick_lng = render_location_picker_map(initial_lat=cur_lat, initial_lng=cur_lng, key_prefix="cp_new_picker")
         if (pick_lat != cur_lat or pick_lng != cur_lng) and pick_lat is not None and pick_lng is not None:
             st.session_state["cp_new_lat"] = pick_lat
             st.session_state["cp_new_lng"] = pick_lng
+            st.session_state["cp_new_lat_input"] = str(pick_lat)
+            st.session_state["cp_new_lng_input"] = str(pick_lng)
             st.session_state["show_new_critical_point_dialog"] = True
             st.rerun()
 
+        if cur_lat is not None and "cp_new_lat_input" not in st.session_state:
+            st.session_state["cp_new_lat_input"] = str(cur_lat)
+        if cur_lng is not None and "cp_new_lng_input" not in st.session_state:
+            st.session_state["cp_new_lng_input"] = str(cur_lng)
+
         col_lat, col_lng = st.columns(2)
         with col_lat:
-            lat_val_str = st.text_input("LATITUD", value=str(st.session_state.get("cp_new_lat", "")), placeholder="Ej: -29.9533", key="cp_new_lat_input")
+            lat_val_str = st.text_input("LATITUD", placeholder="Ej: -29.9533", key="cp_new_lat_input")
         with col_lng:
-            lng_val_str = st.text_input("LONGITUD", value=str(st.session_state.get("cp_new_lng", "")), placeholder="Ej: -71.3395", key="cp_new_lng_input")
+            lng_val_str = st.text_input("LONGITUD", placeholder="Ej: -71.3395", key="cp_new_lng_input")
+
+        col_gps_btn, _ = st.columns([1.2, 1])
+        with col_gps_btn:
+            if st.button("Usar ubicación actual del dispositivo", key="btn_get_gps_cp", width="stretch"):
+                st.session_state["request_gps_cp"] = True
+                st.rerun()
 
         try:
-            cur_lat = float(lat_val_str) if lat_val_str else None
-            cur_lng = float(lng_val_str) if lng_val_str else None
+            cur_lat = float(lat_val_str) if lat_val_str and lat_val_str.strip() else st.session_state.get("cp_new_lat")
+            cur_lng = float(lng_val_str) if lng_val_str and lng_val_str.strip() else st.session_state.get("cp_new_lng")
         except ValueError:
-            cur_lat, cur_lng = None, None
-
-        col_gps_btn, col_gps_status = st.columns([1.2, 1])
-        with col_gps_btn:
-            if st.button("Usar ubicación actual del dispositivo", key="btn_get_gps_cp", use_container_width=True):
-                st.session_state["request_gps_cp"] = True
-
-        if st.session_state.get("request_gps_cp", False):
-            with col_gps_status:
-                with st.spinner("Obteniendo coordenadas GPS..."):
-                    location = get_geolocation()
-                    if location:
-                        if "error" in location:
-                            st.error(f"Error GPS: {location['error']['message']}")
-                            st.session_state["request_gps_cp"] = False
-                        else:
-                            coords = location.get("coords", {})
-                            lat = coords.get("latitude")
-                            lng = coords.get("longitude")
-                            if lat is not None and lng is not None:
-                                st.session_state["cp_new_lat"] = round(lat, 6)
-                                st.session_state["cp_new_lng"] = round(lng, 6)
-                                st.session_state["request_gps_cp"] = False
-                                st.session_state["show_new_critical_point_dialog"] = True
-                                st.rerun()
+            cur_lat = st.session_state.get("cp_new_lat")
+            cur_lng = st.session_state.get("cp_new_lng")
 
         if cur_lat and cur_lng:
             st.success(f"Coordenadas fijadas: {cur_lat}, {cur_lng}")
 
-        # Validación
         missing = []
         if not name or not name.strip():
             missing.append("Nombre")
@@ -555,8 +567,8 @@ def render_new_critical_point_dialog():
                 st.session_state["show_new_critical_point_dialog"] = False
                 st.session_state.pop("cp_new_lat", None)
                 st.session_state.pop("cp_new_lng", None)
-                import time
-                time.sleep(1)
+                st.session_state.pop("cp_new_lat_input", None)
+                st.session_state.pop("cp_new_lng_input", None)
                 st.rerun()
             except Exception as e:
                 st.error(f"Error al guardar punto crítico: {e}")
@@ -613,9 +625,7 @@ def render_new_critical_point_dialog():
                         if st.button("Eliminar", key=f"del_cp_{cp_id}", type="secondary"):
                             try:
                                 delete_critical_point(cp_id)
-                                st.success(f"Punto '{cp_name}' eliminado.")
-                                import time
-                                time.sleep(0.5)
+                                st.toast(f"Punto '{cp_name}' eliminado.")
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"Error al eliminar: {e}")

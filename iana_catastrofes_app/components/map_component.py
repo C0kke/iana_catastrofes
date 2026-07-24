@@ -24,7 +24,7 @@ def render_location_picker_map(
     
     m = folium.Map(
         location=[lat_val, lng_val],
-        zoom_start=12 if (initial_lat and initial_lng) else 10,
+        zoom_start=18 if (initial_lat and initial_lng) else 12,
         tiles="OpenStreetMap"
     )
 

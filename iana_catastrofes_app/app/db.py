@@ -340,14 +340,19 @@ def create_critical_point(
 
     try:
         res = supabase_client.table("critical_points").insert(data).execute()
-        if res.data:
-            return res.data[0]
+        if res.data and len(res.data) > 0:
+            created_cp = res.data[0]
+            _LOCAL_CRITICAL_POINTS.insert(0, created_cp)
+            return created_cp
+        else:
+            data["id"] = f"cp-local-{int(datetime.now().timestamp())}"
+            _LOCAL_CRITICAL_POINTS.insert(0, data)
+            return data
     except Exception as e:
         print(f"Advertencia al crear punto crítico en Supabase: {e}")
         data["id"] = f"cp-local-{int(datetime.now().timestamp())}"
         _LOCAL_CRITICAL_POINTS.insert(0, data)
         return data
-    return data
 
 def list_critical_points(commune: Optional[str] = None) -> List[Dict[str, Any]]:
     """Lista todos los Puntos Críticos registrados."""
