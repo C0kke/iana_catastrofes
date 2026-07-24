@@ -3,9 +3,17 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from fpdf import FPDF
+
+try:
+    from chatbot_emergencia_app.app.ai_verifier import analyze_communal_dashboard, dump_obj
+except ModuleNotFoundError:
+    try:
+        from iana_catastrofes_app.app.ai_verifier import analyze_communal_dashboard, dump_obj
+    except ModuleNotFoundError:
+        from app.ai_verifier import analyze_communal_dashboard, dump_obj
 
 class ExecutivePDF(FPDF):
     def header(self):
@@ -249,7 +257,7 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
         st.info("No se han registrado emergencias georreferenciadas o asociadas a comunas en el sistema actualmente.")
         return
 
-    col_sel, col_blank = st.columns([1.8, 2.2])
+    col_sel, col_btn = st.columns([1.8, 1.2])
     with col_sel:
         selected_commune = st.selectbox(
             "Filtrar por Comuna Afectada",
@@ -261,6 +269,26 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
         projects_with_commune if selected_commune == "Todas las Comunas Afectadas"
         else [p for p in projects_with_commune if p.get("commune") == selected_commune]
     )
+
+    filtered_cp = (
+        critical_points if selected_commune == "Todas las Comunas Afectadas"
+        else [cp for cp in critical_points if cp.get("commune") == selected_commune]
+    )
+
+    with col_btn:
+        st.markdown("<div style='margin-top: 1.7rem;'></div>", unsafe_allow_html=True)
+        if st.button("Ejecutar Análisis Comunal IA", type="primary", key="btn_run_commune_ai_eval", width="stretch", help="Analiza todas las emergencias activas de la zona e integra la afectación por servicios con Inteligencia Artificial"):
+            with st.spinner(f"Ejecutando evaluación inteligente consolidada para {selected_commune}..."):
+                try:
+                    eval_res = analyze_communal_dashboard(
+                        commune_name=selected_commune,
+                        projects=filtered_projects,
+                        critical_points=filtered_cp
+                    )
+                    st.session_state[f"commune_ai_eval_{selected_commune}"] = eval_res
+                    st.success("¡Análisis Comunal con IA ejecutado y actualizado exitosamente!")
+                except Exception as e:
+                    st.error(f"Error al ejecutar el análisis con IA: {e}")
 
     # 1. KPIs Críticos del Catastro
     c_active = [p for p in filtered_projects if (p.get("status") or "activa") == "activa"]
@@ -284,6 +312,72 @@ def render_commune_impact_dashboard(all_projects: List[Dict[str, Any]], critical
         st.metric(label="AGUAS DEL VALLE", value=water_count)
     with k6:
         st.metric(label="SOLICITUD DE MAQUINARIA", value=req_machinery)
+
+    # 1.5 Renderizado del Análisis de IA Comunal si fue ejecutado
+    ai_eval: Optional[Any] = st.session_state.get(f"commune_ai_eval_{selected_commune}")
+    if ai_eval:
+        st.markdown("---")
+        st.markdown(f"#### 🤖 Diagnóstico e Inteligencia Operativa Comunal IA — **{selected_commune.upper()}**")
+        
+        alert_lvl = getattr(ai_eval, "communal_alert_level", "ALTA - ALERTA MÚLTIPLE")
+        alert_bg = "#dc2626" if "CRÍTICA" in alert_lvl.upper() else ("#d97706" if "ALTA" in alert_lvl.upper() else "#0284c7")
+        exec_sum = getattr(ai_eval, 'executive_summary', '')
+        
+        st.markdown(f"""
+            <div style="background-color: var(--card-bg); border-left: 6px solid {alert_bg}; padding: 1.2rem; border-radius: 8px; border: 1px solid var(--card-border); margin-bottom: 1rem;">
+                <span style="background-color: {alert_bg}; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">
+                    NIVEL GLOBAL DE ALERTA: {alert_lvl}
+                </span>
+                <h4 style="color: var(--blue-title); margin: 12px 0 8px 0;">Resumen Ejecutivo de Diagnóstico Territorial</h4>
+                <p style="margin: 0; color: #334155; font-size: 0.95rem; line-height: 1.6;">{exec_sum}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        tab_ai1, tab_ai2, tab_ai3 = st.tabs([
+            "Afectación por Servicios y Sectores",
+            "Recomendaciones Estratégicas de IA",
+            "Verificación Normativa (Ley 21.364 / D104)"
+        ])
+
+        with tab_ai1:
+            services = getattr(ai_eval, "services_evaluations", [])
+            if services:
+                for s in services:
+                    s_dict = dump_obj(s)
+                    s_name = s_dict.get("service_name", "Servicio")
+                    s_lvl = s_dict.get("affectation_level", "Media")
+                    s_sum = s_dict.get("summary", "")
+                    s_acts = s_dict.get("required_actions", [])
+
+                    badge_c = "#dc2626" if s_lvl in ["Crítica", "Critica"] else ("#d97706" if s_lvl == "Alta" else "#0284c7")
+                    
+                    st.markdown(f"""
+                        <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--card-border); border-radius: 6px; padding: 1rem; margin-bottom: 0.8rem;">
+                            <span style="color: {badge_c}; font-weight: bold; float: right; font-size: 0.85rem;">AFECTACIÓN: {s_lvl.upper()}</span>
+                            <strong style="font-size: 1.05rem; color: var(--blue-title);">{s_name}</strong>
+                            <p style="margin: 8px 0 6px 0; font-size: 0.92rem; color: #334155;">{s_sum}</p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    if s_acts:
+                        st.markdown("**Acciones operativas requeridas:**")
+                        for act in s_acts:
+                            st.markdown(f"- {act}")
+            else:
+                st.info("Sin registros de afectación por servicios.")
+
+        with tab_ai2:
+            recs = getattr(ai_eval, "consolidated_ai_recommendations", [])
+            if recs:
+                st.markdown("**Plan de Acción y Recomendaciones Estratégicas Consolidadas:**")
+                for r in recs:
+                    st.markdown(f"✔ **{r}**")
+            else:
+                st.info("Sin recomendaciones específicas.")
+
+        with tab_ai3:
+            norm_notes = getattr(ai_eval, "normative_compliance_notes", "")
+            st.markdown("**Observaciones de Cumplimiento Legal (SINAPRED & Decreto 104):**")
+            st.info(norm_notes if norm_notes else "La situación cumple con los parámetros generales de la Ley N° 21.364.")
 
     st.markdown("---")
 

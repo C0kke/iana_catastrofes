@@ -522,3 +522,84 @@ def consolidate_accident_evaluation(
         temperature=0.1
     )
     return res
+
+class CommunalServiceAnalysis(BaseModel):
+    service_name: str = Field(description="Nombre del servicio o sector técnico (ej. 'MOP / Vialidad', 'Aguas del Valle / Agua Potable', 'CGE / Electricidad', 'DIDECO / Asistencia Social', 'SENAPRED / Emergencias').")
+    affectation_level: str = Field(description="Nivel de afectación del servicio: 'Crítica', 'Alta', 'Media' o 'Baja'.")
+    summary: str = Field(description="Diagnóstico conciso del impacto en este servicio en la comuna o región.")
+    required_actions: List[str] = Field(description="Acciones prioritarias y recursos que deben desplegarse para este servicio.")
+
+class CommunalDashboardEvaluation(BaseModel):
+    executive_summary: str = Field(description="Resumen ejecutivo integral del estado de la comuna/región frente a las emergencias registradas (máx 300 palabras).")
+    communal_alert_level: str = Field(description="Nivel de alerta global comunal (ej: 'CRÍTICA - ALTA AFECTACIÓN COMUNAL', 'ALTA - ALERTAS MÚLTIPLES', 'MEDIA - CONTROL PARCIAL', 'BAJA - CONTROLADO'). JAMÁS USES PORCENTAJES.")
+    services_evaluations: List[CommunalServiceAnalysis] = Field(description="Análisis detallado por cada uno de los servicios e infraestructura afectada.")
+    consolidated_ai_recommendations: List[str] = Field(description="Lista priorizada de recomendaciones estratégicas e intersectoriales para el Comandante Operativo y COGRID.")
+    normative_compliance_notes: str = Field(description="Indicaciones de cumplimiento normativo bajo la Ley N° 21.364 (SINAPRED) y Decreto Supremo N° 104 (si aplican sismos o eventos mayores).")
+
+def analyze_communal_dashboard(
+    commune_name: str,
+    projects: List[Dict[str, Any]],
+    critical_points: List[Dict[str, Any]],
+    model_name: str = DEFAULT_MODEL
+) -> CommunalDashboardEvaluation:
+    """Ejecuta un análisis consolidado con IA sobre el conjunto total de emergencias activas y servicios en la comuna o región."""
+    if not client:
+        raise RuntimeError("El cliente de análisis no está configurado. Revisa la clave")
+
+    act_p = [p for p in projects if p.get("status", "activa") == "activa"]
+    act_cp = [cp for cp in critical_points if cp.get("status", "activo") == "activo"]
+
+    ley21364_text = load_ley21364_summary()
+    decreto104_text = load_decreto104_summary()
+
+    emer_summaries = []
+    for p in act_p[:25]:
+        p_name = p.get("name", "Emergencia")
+        p_cat = p.get("project_category", "Infraestructura")
+        p_aff = p.get("real_affectation_level", p.get("affectation_level", "Media"))
+        p_risk = p.get("real_people_risk", p.get("people_risk", "Medio"))
+        p_desc = p.get("description", "")
+        emer_summaries.append(f"- [{p_cat}] {p_name} | Comuna: {p.get('commune')} | Afectación: {p_aff} | Riesgo: {p_risk} | Detalles: {p_desc}")
+
+    cp_summaries = []
+    for cp in act_cp[:20]:
+        cp_name = cp.get("name", "Punto Crítico")
+        cp_type = cp.get("point_type", "ruta_cortada")
+        cp_sev = cp.get("severity", "CRÍTICO")
+        cp_desc = cp.get("description", "")
+        cp_summaries.append(f"- [{cp_type.upper()}] {cp_name} ({cp.get('commune')}) | Severidad: {cp_sev} | Desc: {cp_desc}")
+
+    prompt = f"""
+    Eres el Comandante Operativo Regional del Sistema Nacional de Prevención y Respuesta ante Desastres (SINAPRED) en la Región de Coquimbo.
+    Debes analizar el mapa global e impacto acumulado de TODAS las emergencias registradas en: **{commune_name.upper()}**.
+
+    --- MARCO LEGAL REGULATORIO (LEY N° 21.364 & DECRETO N° 104) ---
+    {ley21364_text}
+    {decreto104_text}
+
+    --- CATASTRO DE EMERGENCIAS ACTIVAS EN TERRENO ({len(act_p)} Registradas) ---
+    {chr(10).join(emer_summaries) if emer_summaries else "Sin emergencias activas actualmente."}
+
+    --- PUNTOS CRÍTICOS Y RUTAS CORTADAS EN TERRENO ({len(act_cp)} Registrados) ---
+    {chr(10).join(cp_summaries) if cp_summaries else "Sin puntos críticos registrados actualmente."}
+
+    INSTRUCCIONES DE EVALUACIÓN COMUNAL / INTERSECTORIAL:
+    1. Revisa la afectación combinada de todos los servicios clave:
+       - **MOP / Vialidad**: Conectividad vial, aislamiento de localidades, estado de puentes y rutas cortadas.
+       - **Aguas del Valle / Servicios Sanitarios**: Rotura de matrices, colapso de colectores de alcantarillado, agua potable.
+       - **CGE / Servicio Eléctrico**: Cortes de suministro, caída de postación y riesgo eléctrico.
+       - **DIDECO / Asistencia Social**: Familias damnificadas, albergues, materiales de emergencia y apoyo humanitario.
+       - **SENAPRED / Emergencias**: Coordinación de Comités COGRID y recursos de emergencia.
+    2. Aplica estrictamente los principios de la Ley N° 21.364 (Escalabilidad, Prevención y Coordinación).
+    3. Si existen emergencias sísmicas o terremotos, aplica la verificación estricta de magnitud y daños constatados EDAN antes de sugerir Zona de Catástrofe (Decreto 104). Si el catastro corresponde a eventos ordinarios no emergentes (partido de fútbol, campamento regular, patrullajes), indícalo como 'Sin riesgo' o 'Operativo Normal'.
+    4. Proporciona recomendaciones estratégicas consolidadas, concretas y accionables para la autoridad comunal/regional.
+    5. JAMÁS ENTREGUES PORCENTAJES.
+    """
+
+    res = client.chat.completions.create(
+        model=model_name,
+        response_model=CommunalDashboardEvaluation,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.1
+    )
+    return res
